@@ -253,6 +253,7 @@ details.adv summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--na
           <button data-base="google" aria-pressed="false">Google</button>
         </div>
         <div class="zoomrow">縮尺 <button class="btn sm ghost" id="zout">－</button><span id="zval">16</span><button class="btn sm ghost" id="zin">＋</button></div>
+        <button class="btn sm ghost" id="zreset">位置を戻す</button>
         <label style="font-weight:700"><input type="checkbox" id="numlabel" checked> 番号を入れる</label>
         <label style="font-weight:700"><input type="checkbox" id="gsistd"> 建物名を濃く</label>
       </div>
@@ -465,7 +466,7 @@ const CATS=[
 ];
 const WALK=m=>Math.max(1,Math.ceil(m/80));
 const $=s=>document.querySelector(s);
-const state={origin:null,addr:"",sho:null,chu:null,cands:[],rows:[],station:null,bus:null,zoom:16,base:"gsi",img:null,tainted:false};
+const state={origin:null,addr:"",sho:null,chu:null,cands:[],rows:[],station:null,bus:null,zoom:16,base:"gsi",img:null,tainted:false,pan:{x:0,y:0}};
 
 function say(t,kind){const e=$("#msg");e.className="status on "+(kind||"info");e.innerHTML=t;}
 function hideMsg(){$("#msg").className="status";}
@@ -774,6 +775,7 @@ function mapPoints(){
   return p;
 }
 function autoZoom(){
+  state.pan={x:0,y:0};
   const pts=mapPoints();
   for(let z=18;z>=12;z--){
     const ps=pts.map(p=>project(p.lat,p.lng,z));
@@ -783,16 +785,37 @@ function autoZoom(){
   }
   state.zoom=12;$("#zval").textContent=12;
 }
-function mapCenter(){
+function unproject(x,y,z){
+  const s=256*Math.pow(2,z);
+  const n=Math.PI-2*Math.PI*y/s;
+  return{lat:180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n))), lng:x/s*360-180};
+}
+function mapCenterBase(){
   const z=state.zoom,pts=mapPoints();
   const ps=pts.map(p=>project(p.lat,p.lng,z));
   const cx=(Math.min(...ps.map(p=>p.x))+Math.max(...ps.map(p=>p.x)))/2;
   const cy=(Math.min(...ps.map(p=>p.y))+Math.max(...ps.map(p=>p.y)))/2;
-  const s=256*Math.pow(2,z);
-  const lng=cx/s*360-180;
-  const n=Math.PI-2*Math.PI*cy/s;
-  const lat=180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n)));
-  return{lat,lng};
+  return unproject(cx,cy,z);
+}
+function mapCenter(){
+  const z=state.zoom,b=mapCenterBase(),p=project(b.lat,b.lng,z);
+  return unproject(p.x-state.pan.x, p.y-state.pan.y, z);
+}
+function enableDrag(el){
+  let on=false,sx=0,sy=0,dx=0,dy=0;
+  el.style.cursor="grab";el.style.touchAction="none";
+  el.onpointerdown=e=>{on=true;sx=e.clientX;sy=e.clientY;dx=dy=0;
+    try{el.setPointerCapture(e.pointerId);}catch(_){}el.style.cursor="grabbing";};
+  el.onpointermove=e=>{if(!on)return;dx=e.clientX-sx;dy=e.clientY-sy;
+    el.style.transform=`translate(${dx}px,${dy}px)`;};
+  const end=()=>{
+    if(!on)return;on=false;el.style.cursor="grab";el.style.transform="";
+    if(Math.abs(dx)>2||Math.abs(dy)>2){
+      const k=OUT_W/el.getBoundingClientRect().width;   // 画面上の縮小分を戻す
+      state.pan.x+=dx*k;state.pan.y+=dy*k;drawMap();
+    }
+  };
+  el.onpointerup=end;el.onpointercancel=end;
 }
 function drawPins(ctx,center,z){
   const c=project(center.lat,center.lng,z), L=c.x-OUT_W/2, T=c.y-OUT_H/2;
@@ -857,9 +880,15 @@ async function drawGsi(){
 }
 function drawGoogle(){
   const z=state.zoom,center=mapCenter(),key=$("#key").value.trim();
+  const num=$("#numlabel").checked;
   const mk=[`markers=size:small%7Ccolor:0xC62828%7C${state.origin.lat.toFixed(6)},${state.origin.lng.toFixed(6)}`];
   const facs=mapPoints().filter(p=>p.kind==="fac");
-  if(facs.length)mk.push("markers=size:tiny%7Ccolor:0xE8730C%7C"+facs.map(p=>`${p.lat.toFixed(6)},${p.lng.toFixed(6)}`).join("%7C"));
+  if(num){
+    // ラベルは1文字のみ・size:mid以上でないと表示されないため、1件ずつ指定する
+    facs.forEach(p=>mk.push(`markers=size:mid%7Ccolor:0xE8730C%7Clabel:${String(p.n).slice(-1)}%7C${p.lat.toFixed(6)},${p.lng.toFixed(6)}`));
+  }else if(facs.length){
+    mk.push("markers=size:tiny%7Ccolor:0xE8730C%7C"+facs.map(p=>`${p.lat.toFixed(6)},${p.lng.toFixed(6)}`).join("%7C"));
+  }
   const url=`https://maps.googleapis.com/maps/api/staticmap?center=${center.lat.toFixed(6)},${center.lng.toFixed(6)}`+
     `&zoom=${z}&size=546x356&scale=2&maptype=roadmap&language=ja&region=JP&${mk.join("&")}&key=${encodeURIComponent(key)}`;
   const im=new Image();im.crossOrigin="anonymous";
@@ -878,13 +907,15 @@ function drawGoogle(){
 }
 function showMap(el){
   const st=$("#stage");st.innerHTML="";st.appendChild(el);state.img=el;
+  enableDrag(el);
   $("#copyimg").disabled=state.tainted;$("#dlimg").disabled=state.tainted;
-  $("#maphint").innerHTML=(state.tainted
+  $("#maphint").innerHTML="<b>地図をドラッグすると位置を動かせます。</b>"+
+    '<b style="color:#C62828">●</b> 物件　<b style="color:#E8730C">●</b> 一覧の番号と対応<br>'
+    +(state.tainted
     ? "この画像はブラウザ経由で直接コピーできません。画像を<b>右クリック →「画像をコピー」</b>で Excel に貼り付けてください。"
     : (state.base==="gsi"
        ? "チラシに使う場合は「出典：国土地理院ウェブサイト」の表記を残してください。この表記があれば印刷・配布ができます。"
-       : "Google の地図を印刷物に使う場合は、Google Maps Platform の利用規約をご確認ください。"))
-    +'<br><b style="color:#C62828">●</b> 物件　<b style="color:#E8730C">●</b> 一覧の番号と対応';
+       : "Google の地図を印刷物に使う場合は、Google Maps Platform の利用規約をご確認ください。"));
 }
 function drawMap(){ state.base==="gsi"?drawGsi():drawGoogle(); }
 
@@ -936,8 +967,9 @@ function initUI(){
     $("#gsistd").parentElement.style.display=state.base==="gsi"?"":"none";
     if(state.origin)drawMap();
   });
-  $("#zin").onclick=()=>{state.zoom=Math.min(19,state.zoom+1);$("#zval").textContent=state.zoom;drawMap();};
-  $("#zout").onclick=()=>{state.zoom=Math.max(11,state.zoom-1);$("#zval").textContent=state.zoom;drawMap();};
+  $("#zin").onclick=()=>{if(state.zoom>=19)return;state.zoom++;state.pan.x*=2;state.pan.y*=2;$("#zval").textContent=state.zoom;drawMap();};
+  $("#zout").onclick=()=>{if(state.zoom<=11)return;state.zoom--;state.pan.x/=2;state.pan.y/=2;$("#zval").textContent=state.zoom;drawMap();};
+  $("#zreset").onclick=()=>{autoZoom();drawMap();};
   $("#numlabel").onchange=drawMap;$("#gsistd").onchange=drawMap;$("#remap").onclick=drawMap;
 
   $("#copyimg").onclick=async()=>{
