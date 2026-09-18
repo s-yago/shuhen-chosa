@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>周辺環境調査シート｜ViVi不動産</title>
+<style>
+:root{
+  --navy:#0F2A4D; --navy-d:#071A32; --navy-l:#2A4E7E;
+  --orange:#E8730C; --gold:#F2A93B; --red:#C62828;
+  --paper:#EDF1F6; --card:#FFFFFF; --line:#C3D0DE; --line-s:#E2E8F0;
+  --ink:#16222F; --ink-m:#4A5A6B;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper); color:var(--ink);
+  font-family:"Hiragino Kaku Gothic ProN","Yu Gothic Medium","Yu Gothic",Meiryo,sans-serif;
+  font-size:17px; line-height:1.65; -webkit-font-smoothing:antialiased;
+}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+
+/* ── header ───────────────────────────── */
+.bar{background:var(--navy);color:#fff;padding:14px 20px;display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;border-bottom:4px solid var(--orange)}
+.bar h1{font-size:21px;margin:0;font-weight:700;letter-spacing:.04em}
+.bar .sub{font-size:14px;color:#A9C2DE}
+.bar .rev{margin-left:auto;font-size:13px;color:#7E9CBE}
+
+.wrap{max-width:1400px;margin:0 auto;padding:20px;display:grid;grid-template-columns:400px 1fr;gap:20px;align-items:start}
+@media(max-width:1000px){.wrap{grid-template-columns:1fr}}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;margin-bottom:16px}
+.card > h2{
+  margin:0;font-size:16px;font-weight:700;padding:11px 16px;
+  background:linear-gradient(180deg,#F7F9FC,#EDF1F6);border-bottom:1px solid var(--line);
+  color:var(--navy);border-radius:5px 5px 0 0;
+}
+.card .body{padding:16px}
+
+label.fld{display:block;font-size:14px;font-weight:700;color:var(--ink-m);margin-bottom:5px}
+input[type=text],input[type=password],select,textarea{
+  width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:4px;background:#fff;
+}
+input[type=text]:focus,input[type=password]:focus,select:focus{outline:3px solid #B9D4F2;outline-offset:0;border-color:var(--navy-l)}
+.addr-in{font-size:19px;font-weight:700}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:12px 18px;border:none;border-radius:4px;background:var(--navy);color:#fff;
+  font-weight:700;cursor:pointer;
+}
+.btn:hover{background:var(--navy-l)}
+.btn:disabled{background:#9AA8B6;cursor:not-allowed}
+.btn.go{width:100%;font-size:19px;background:var(--orange);margin-top:14px}
+.btn.go:hover{background:#D06608}
+.btn.sm{padding:7px 13px;font-size:14px}
+.btn.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--line)}
+.btn.ghost:hover{background:#F2F6FA}
+
+.hint{font-size:13px;color:var(--ink-m);margin-top:6px;line-height:1.5}
+.row2{display:flex;gap:10px}
+.row2 > *{flex:1}
+
+/* ── school result ────────────────────── */
+.schools{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.school{border:2px solid var(--navy);border-radius:5px;padding:11px 13px;background:#F7FAFD}
+.school .k{font-size:13px;color:var(--ink-m);font-weight:700}
+.school .v{font-size:24px;font-weight:700;color:var(--navy);line-height:1.25}
+.warn{
+  margin-top:12px;border-left:6px solid var(--red);background:#FDF0F0;
+  padding:11px 14px;font-size:15px;border-radius:0 4px 4px 0;
+}
+.warn b{color:var(--red)}
+.warn .note{font-size:13.5px;color:#6B4040;margin-top:4px;word-break:break-all}
+
+/* ── facility table ───────────────────── */
+table.fac{width:100%;border-collapse:collapse}
+table.fac th{
+  background:var(--navy);color:#fff;font-size:14px;font-weight:700;
+  padding:9px 10px;text-align:left;white-space:nowrap;
+}
+table.fac td{border-bottom:1px solid var(--line-s);padding:8px 10px;vertical-align:middle}
+table.fac tr.must td{background:#FFF8EC}
+table.fac tr:hover td{background:#F2F7FC}
+table.fac tr.must:hover td{background:#FDF0DC}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:3px;background:#E3EAF2;color:var(--navy-l);white-space:nowrap}
+.tag.must{background:var(--gold);color:#4A3000}
+.fname{font-size:17px;font-weight:700}
+.mins{font-size:26px;font-weight:700;color:var(--orange);white-space:nowrap;text-align:right;line-height:1}
+.mins small{font-size:14px;color:var(--ink-m);font-weight:700}
+.dist{font-size:12.5px;color:var(--ink-m);text-align:right;white-space:nowrap}
+td.ctl{width:34px;text-align:center}
+td.ctl input{width:19px;height:19px;accent-color:var(--orange)}
+select.swap{border:1px solid var(--line-s);padding:4px 6px;font-size:13px;border-radius:3px;max-width:100%;background:#FBFCFE}
+
+/* ── transport ────────────────────────── */
+.trans{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tbox{border:1px solid var(--line);border-radius:5px;padding:11px 13px}
+.tbox .k{font-size:13px;font-weight:700;color:var(--ink-m)}
+.tbox .v{font-size:18px;font-weight:700;margin-top:2px}
+.tbox .m{font-size:23px;font-weight:700;color:var(--orange)}
+
+/* ── map ──────────────────────────────── */
+.maptools{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-bottom:12px;font-size:14px}
+.seg{display:inline-flex;border:1.5px solid var(--navy);border-radius:4px;overflow:hidden}
+.seg button{border:none;background:#fff;color:var(--navy);padding:8px 15px;font-weight:700;cursor:pointer;font-size:14px}
+.seg button[aria-pressed=true]{background:var(--navy);color:#fff}
+.mapstage{background:#DDE4EC;border:1px solid var(--line);border-radius:5px;padding:12px;text-align:center;overflow:auto}
+.mapstage canvas,.mapstage img{max-width:100%;height:auto;display:block;margin:0 auto;box-shadow:0 1px 5px rgba(0,0,0,.2);background:#fff}
+.zoomrow{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700}
+.zoomrow input[type=range]{width:120px;accent-color:var(--orange)}
+
+.status{font-size:14.5px;padding:10px 14px;border-radius:4px;margin-bottom:12px;display:none}
+.status.on{display:block}
+.status.info{background:#E6F0FA;border-left:5px solid var(--navy-l)}
+.status.err{background:#FDECEC;border-left:5px solid var(--red);color:#7A1B1B}
+.status.ok{background:#EAF6EC;border-left:5px solid #2E7D32}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{font-size:13.5px;border:1.5px solid var(--line);border-radius:14px;padding:4px 11px;cursor:pointer;background:#fff;user-select:none}
+.chip[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy)}
+details.adv summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--navy-l);padding:6px 0}
+.spin{display:inline-block;width:15px;height:15px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+.foot{max-width:1400px;margin:0 auto;padding:6px 20px 30px;font-size:12.5px;color:var(--ink-m)}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <h1>周辺環境調査シート</h1>
+  <span class="sub">住所1つで 学区・交通・周辺施設・地図を自動作成</span>
+  <span class="rev">ViVi不動産 社内ツール／REV 2026.09</span>
+</div>
+
+<div class="wrap">
+<!-- ══ 左カラム ══ -->
+<div>
+  <div class="card">
+    <h2>物件住所</h2>
+    <div class="body">
+      <input type="text" id="addr" class="addr-in" placeholder="富山市栄町1丁目7番3" autocomplete="off">
+      <div class="hint">「富山市〇〇町1-7-3」の形でも判定できます。</div>
+      <button class="btn go" id="run">調査する</button>
+      <div class="hint" id="quota"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>周辺施設の候補カテゴリ</h2>
+    <div class="body">
+      <div class="chips" id="cats"></div>
+      <div class="hint">オンにしたカテゴリから、近い順に6件を選びます（1カテゴリ1件）。</div>
+      <details class="adv" style="margin-top:10px">
+        <summary>詳細設定</summary>
+        <div style="margin-top:8px">
+          <label style="font-size:14px"><input type="checkbox" id="allowdup"> 同じカテゴリから2件以上選ぶことを許可</label><br>
+          <label class="fld" style="margin-top:10px">地図に載せる施設の数（学校を除く）</label>
+          <input type="range" id="mapn" min="0" max="6" value="4" style="width:100%;accent-color:var(--orange)">
+          <span id="mapnv" style="font-weight:700"></span>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Google APIキー</h2>
+    <div class="body">
+      <input type="password" id="key" placeholder="AIza..." autocomplete="off">
+      <div class="row2" style="margin-top:9px">
+        <button class="btn sm ghost" id="savekey">このPCに保存</button>
+        <button class="btn sm ghost" id="clearkey">消去</button>
+      </div>
+      <div class="hint">vivi-teian プロジェクトのキー。s-yago.github.io にリファラー制限がかかっている前提です。保存先はこのブラウザ内のみ。</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 右カラム ══ -->
+<div>
+  <div class="status" id="msg"></div>
+
+  <div class="card hide" id="c-school">
+    <h2>通学区域</h2>
+    <div class="body">
+      <div class="schools">
+        <div class="school"><div class="k">小学校</div><div class="v" id="v-sho">－</div></div>
+        <div class="school"><div class="k">中学校</div><div class="v" id="v-chu">－</div></div>
+      </div>
+      <div id="school-warn"></div>
+      <div id="school-pick" class="hide" style="margin-top:12px">
+        <label class="fld">学区を手動で選ぶ</label>
+        <select id="pick"></select>
+      </div>
+      <div class="hint" id="matchinfo"></div>
+    </div>
+  </div>
+
+  <div class="card hide" id="c-trans">
+    <h2>最寄り交通</h2>
+    <div class="body"><div class="trans">
+      <div class="tbox"><div class="k">最寄り駅</div><div class="v" id="v-sta">－</div><div class="m" id="m-sta"></div></div>
+      <div class="tbox"><div class="k">最寄りバス停</div><div class="v" id="v-bus">－</div><div class="m" id="m-bus"></div></div>
+    </div></div>
+  </div>
+
+  <div class="card hide" id="c-fac">
+    <h2>周辺施設（8項目）</h2>
+    <div class="body">
+      <table class="fac"><thead><tr>
+        <th title="地図に載せる">地図</th><th>区分</th><th>施設名</th><th style="text-align:right">徒歩</th><th>差し替え</th>
+      </tr></thead><tbody id="fac-body"></tbody></table>
+      <div class="row2" style="margin-top:14px;max-width:420px">
+        <button class="btn sm ghost" id="copytxt">一覧をコピー</button>
+        <button class="btn sm ghost" id="copytsv">Excel用にコピー</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card hide" id="c-map">
+    <h2>地図画像</h2>
+    <div class="body">
+      <div class="maptools">
+        <div class="seg" id="seg-base">
+          <button data-base="gsi" aria-pressed="true">地理院タイル</button>
+          <button data-base="google" aria-pressed="false">Google</button>
+        </div>
+        <div class="zoomrow">縮尺 <button class="btn sm ghost" id="zout">－</button><span id="zval">16</span><button class="btn sm ghost" id="zin">＋</button></div>
+        <label style="font-weight:700"><input type="checkbox" id="numlabel"> 番号を入れる</label>
+        <label style="font-weight:700"><input type="checkbox" id="gsistd"> 建物名を濃く</label>
+      </div>
+      <div class="mapstage" id="stage"></div>
+      <div class="row2" style="margin-top:14px;max-width:560px">
+        <button class="btn sm" id="copyimg">画像をコピー</button>
+        <button class="btn sm ghost" id="dlimg">PNGで保存</button>
+        <button class="btn sm ghost" id="remap">再描画</button>
+      </div>
+      <div class="hint" id="maphint"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="foot" id="credit"></div>
+<script>
+// 富山市小中学校通学区域表（令和6年8月4日改正）
+// 原文の表記をそのまま保持し、範囲展開・例外フラグはパーサ側で処理する
+const GAKKU_RAW = [
+["芝園","芝園","安住町、荒町、磯部町一丁目、一番町、今木町、越前町、蛯町、大手町、鹿島町一丁目～二丁目、小島町、桜木町、桜橋通り、桜町一丁目～二丁目、七軒町、芝園町一丁目～三丁目、白銀町、新川原町、新桜町、新総曲輪、砂町、諏訪川原一丁目～三丁目、総曲輪一丁目～四丁目、千歳町一丁目～二丁目、常盤町、豊川町、土居原町(6番16～19号のみ)、西四十物町、西町、旅籠町、八人町、日之出町、東田地方町一丁目(1,2,5,6番)、平吹町、舟橋北町、舟橋南町、本町、本丸、丸の内一丁目～三丁目、安野屋町一丁目～三丁目、愛宕町一丁目～二丁目、牛島町、牛島本町一丁目～二丁目、内幸町、木場町、新富町一丁目～二丁目、神通本町一丁目～二丁目、神通町一丁目～三丁目、宝町一丁目～二丁目、舟橋今町、湊入船町(14～16番のみ)、明輪町、安田町"],
+["中央","南部","石倉町、梅沢町一丁目～三丁目、太田口通り一丁目～三丁目、上本町、小泉町中部、小泉町北部、五番町、山王町、三番町、辰巳町一丁目～二丁目、中央通り一丁目～三丁目、堤町通り一丁目～二丁目、中野新町一丁目～二丁目、西中野本町(3番3,7,11～13号を除く)、西中野町一丁目(15番11～14,28,31,34,40,42,43,46号を除く)、西中野町二丁目、古鍛冶町、星井町一丁目～三丁目、南新町、南田町一丁目～二丁目、室町通り一丁目～二丁目"],
+["中央","大泉","旭町、大泉北町、大泉東町一丁目、大泉町三丁目、音羽町一丁目、音羽町二丁目(1番12～15号,2番14～17号,3番12～18号,4,5番を除く)、雄山町、清水中町、清水町一丁目～九丁目、西公文名町、元町一丁目"],
+["西田地方","南部","相生町、磯部町二丁目～四丁目、新根塚町一丁目、千石町一丁目～六丁目、土居原町(6番16～19号を除く)、長柄町一丁目～三丁目、西山王町、西田地方、西田地方町一丁目～三丁目、布瀬町一丁目～二丁目、花園町一丁目～四丁目、堀端町、桃井町一丁目～二丁目"],
+["光陽","南部","今泉西部町、掛尾栄町、掛尾町(字なし354～402,416～460,473～509,512,513番2号～514番1号,515番1～3号,516～548,601～648番のみ／千保寺割125～175番ほかのみ)、黒瀬、黒瀬北町一丁目～二丁目、新根塚町二丁目～三丁目、太郎丸西町一丁目～二丁目、布瀬本町、布瀬町南一丁目～三丁目、根塚町一丁目～四丁目、二口町一丁目～五丁目"],
+["柳町","東部","泉町一丁目～二丁目、稲荷町一丁目～三丁目、稲荷町四丁目(4～7番のみ)、於保多町、館出町一丁目～二丁目、東町一丁目～三丁目、緑町一丁目～二丁目、向川原町、柳町一丁目(1番1～6,8～10,16,17,21号、2番2,5,9～11,16～18,25,26,28,29号を除く)、柳町二丁目(1番1,2,4,7,9,11,12,13,15,17,19,21号を除く)、柳町三丁目(1番1,2,5～8,19,20号、2番1,17号、3番5,25号を除く)"],
+["柳町","奥田","稲荷園町、稲荷町四丁目(1～3番のみ)、稲荷元町一丁目～三丁目、北新町一丁目～二丁目、千歳町三丁目、東田地方町一丁目(3,4番のみ)、東田地方町二丁目、柳町一丁目(1番1～6,8～10,16,17,21号、2番2,5,9～11,16～18,25,26,28,29号のみ)、柳町二丁目(1番1,2,4,7,9,11,12,13,15,17,19,21号のみ)、柳町三丁目(1番1,2,5～8,19,20号、2番1,17号、3番5,25号のみ)、柳町四丁目、弥生町一丁目～二丁目"],
+["堀川","大泉","大泉東部、大泉中町、大泉東町二丁目"],
+["堀川","堀川","今泉、今泉北部町、大泉1区南部、大泉中部、大泉本町一丁目～二丁目、大泉町一丁目～二丁目、大町1区西部、大町1区中部、大町1区北部、大町2区、掛尾町(字なし354～402ほかを除く／千保寺割125～175番ほかを除く)、小泉町東部、小泉町南部、太郎丸1区～2区、太郎丸本町一丁目～四丁目、西大泉、西中野本町(3番3,7,11～13号のみ)、西中野町一丁目(15番11～14,28,31,34,40,42,43,46号のみ)、根塚町、東中野町一丁目～三丁目、堀川小泉町1区～2区、堀川小泉町一丁目～二丁目"],
+["堀川南","堀川","大町1区南部、大町南台、上新保、上堀町、上堀南町、清住町、下堀、堀川本郷、堀川天山町、堀川町、本郷新、本郷町1区～5区"],
+["東部","東部","石金一丁目～三丁目、経堂四丁目(10番18,21号のみ)、長江1区、長江一丁目～五丁目、長江新町一丁目～四丁目、長江東町一丁目(8番10号、9番8号を除く)、長江東町二丁目～三丁目、長江本町(10番45号、11番7,11～13,21～26,32号、12番13～18,33号を除く)、西長江一丁目～四丁目、西長江本町、東石金町(9番53～55,58号を除く)、不二越本町一丁目、不二越本町二丁目(2番を除く)、不二越町(14番6,21～23,30,33,36,39,41,43,45,48,52～54,58号、17番、18番を除く)"],
+["東部","大泉","音羽町二丁目(1番12～15号,2番14～17号,3番12～18号,4,5番のみ)、栄町一丁目～三丁目、清水元町、住吉町一丁目～二丁目、元町二丁目"],
+["奥田","奥田","赤江町、曙町、牛島新町、永楽町、奥井町、奥田寿町、奥田新町、奥田双葉町、奥田本町、奥田町、窪新町、窪本町、下奥井一丁目～二丁目、下新町、城北町、久方町、湊入船町(1～13番のみ)、四ツ葉町"],
+["奥田北","奥田","粟島町一丁目～三丁目、興人町、下赤江町二丁目(14番の一部・別図面あり)、下新北町、下新西町、下新日曹町、下新本町、千代田町、中島一丁目～五丁目、松若町"],
+["桜谷","西部","安養坊、石坂、石坂東町、駒見、五艘、桜谷みどり町一丁目～二丁目、田刈屋、田刈屋新町、畑中"],
+["五福","西部","金屋1区～4区、五福1区～6区、五福8区～10区、五福新町、五福末広町、下野新、寺町1区～4区、寺町6区、寺町けや木台、鵯島1区～3区、ひよどり南台、文京町一丁目～三丁目"],
+["神明","西部","有明町1区～3区、有沢、有沢新町、久郷、下野、庄高田、高田、羽根1区～3区"],
+["岩瀬","岩瀬","岩瀬赤田町1区～2区、岩瀬荒木町、岩瀬入船町、岩瀬梅本町、岩瀬大町、岩瀬御蔵町、岩瀬表町、岩瀬祗園町、岩瀬古志町、岩瀬古志町1区、岩瀬諏訪町、岩瀬萩浦町、岩瀬文化町、岩瀬松原町、岩瀬港町、岩瀬幸町、岩瀬堺町、岩瀬新町1区～2区、岩瀬神明町、岩瀬天神町1区～2区、岩瀬土場町、岩瀬仲町、岩瀬新川町1区～2区、岩瀬白山町1区～2区、岩瀬福来町"],
+["萩浦","岩瀬","上野新町(2番86,89,91,92,93号のみ)、高畠町一丁目～二丁目、千原崎、千原崎一丁目～二丁目、西宮町、蓮町一丁目～六丁目、森、森住町(10番10号を除く)、森若町、森一丁目～二丁目、森三丁目(12番を除く)、森四丁目～五丁目"],
+["大広田","北部","海岸通、海岸通新町、加古町、銀嶺町、住友町、清風町、田畑新町、田畑南部、田畑北部、永久町、中田、中田一丁目～三丁目、那智町、晴海台、東ヶ丘、東富山寿町一丁目～三丁目、松浦町、森住町(10番10号のみ)、森三丁目(12番のみ)"],
+["浜黒崎","北部","古志町一丁目～六丁目、野田、浜黒崎第1区、浜黒崎浜通り、浜黒崎本町、針日、日方江第1区～第2区、平榎、横越"],
+["針原","北部","楠木、下飯野、高島、道正、野中、針原中町、町袋、宮条、宮園町、宮成、宮成中部、宮町"],
+["針原","新庄","小西、針原新町1区～3区、針原新町4区南部、針原新町4区北部、針原新町5区、三上"],
+["豊田","岩瀬","犬島一丁目～六丁目、犬島七丁目(1番1～3号を除く)、犬島新町一丁目～二丁目、上野新町(2番86,89,91,92,93号を除く)、城川原一丁目～三丁目、高園町、豊丘町、豊島町、豊城新町、豊城町、豊田本町一丁目(1番1,46、11番21号、12番5～32号、13番14,18,20号、15番3号のみ)、豊田本町二丁目(1番8,23～32,34～44号、2番44号、8番4,9,27～30号、9番3号、13番45～50号のみ)、豊若町二丁目(1番43～66号、8番1,62～69号のみ)"],
+["豊田","北部","犬島七丁目(1番1～3号のみ)、豊田、豊田本町一丁目(一部は岩瀬中学校区)、豊田本町二丁目(一部は岩瀬中学校区)、豊田本町三丁目～四丁目、豊若町一丁目、水落、水落一丁目、豊若町二丁目(1番43～66号、8番1,62～69号を除く)、豊若町三丁目、米田、米田すずかけ台一丁目～三丁目、米田町一丁目～三丁目、緑陽町"],
+["豊田","奥田","下冨居一丁目～二丁目、豊田町一丁目～二丁目"],
+["広田","奥田","上赤江町一丁目～二丁目、下赤江町一丁目、下赤江町二丁目(14番の一部を除く・別図面あり)"],
+["広田","新庄","新屋、新屋新町、飯野、上冨居、上冨居一丁目～三丁目、上冨居新町、新冨居、千成町、鶴ヶ丘町、問屋町一丁目～三丁目、中冨居、鍋田、冨居栄町、中冨居新町、下冨居"],
+["新庄","新庄","綾田町一丁目～三丁目、荒川一丁目～五丁目、荒川新町、上庄町、経堂、経堂一丁目～三丁目、経堂四丁目(10番18,21号を除く)、新庄本町三丁目、新庄町一丁目(2番1～8号を除く)、新庄町二丁目～四丁目、新庄町第1～第4、新園町、双代町、田中町一丁目～五丁目、常盤台、常盤台2区、長江東町一丁目(8番10号、9番8号のみ)、西新庄、向新庄町一丁目(1番、18番3,47号のみ)、経堂新町"],
+["新庄北","新庄","荏原、上飯野、上飯野新町一丁目～五丁目、新庄北町、新庄銀座一丁目～三丁目、新庄北部第1～第5、新庄本町一丁目～二丁目、新庄町一丁目(2番1～8号のみ)、手屋一丁目～三丁目、向新庄第4、向新庄町一丁目(1番、18番3,47号を除く)、向新庄町二丁目、向新庄町三丁目(7番22号旧:日俣は除く)、向新庄町四丁目～八丁目、新庄町"],
+["藤ノ木","藤ノ木","朝日、荏原新町、大江干、大江干新町、大島一丁目～四丁目、大島新町、金代、栄新町、新金代一丁目～二丁目、中間島一丁目～二丁目、富岡町、日俣、開、藤代町、藤木、藤木県営住宅、藤木新町、藤の木園町、藤の木台一丁目～三丁目、藤木中町、藤の木緑台、藤見町、町新、向新庄町三丁目(7番22号旧:日俣のみ)"],
+["山室","大泉","青葉町、山室2区、山室新町"],
+["山室","山室","秋吉、秋吉新町、公文名、高原本町、高原町、高屋敷1区、天正寺、中市、中市一丁目～二丁目、中川原新町、長江本町(10番45号、11番7,11～13,21～26,32号、12番13～18,33号のみ)、東石金町(9番53～55,58号のみ)、不二越本町二丁目(2番のみ)、不二越町(14番6,21～23,30,33,36,39,41,43,45,48,52～54,58号、17番、18番のみ)、山室、山室向陽台"],
+["山室中部","山室","新横内町、高屋敷2区、中川原、中川原台一丁目～二丁目、流杉、西野新、東流杉、古寺、古寺新町、町村、町村一丁目～二丁目、松ヶ丘、不二栄町1区～3区、山室荒屋、山室荒屋新町、横内第3、若葉台"],
+["太田","山室","石屋、太田北区、太田向陽台、太田中区、太田南町、大場、大宮町、昭和新町、新名、城ヶ丘1区～5区、城新町、城村、城村新町、城若町、関、中屋、西番第1～第3、八川、横内第1～第2"],
+["蜷川","堀川","赤田、赤田新町、朝菜町一丁目～六丁目、上袋、黒崎、小杉、新堀町、蜷川、布市、布市新町、二俣、二俣新町、八日町"],
+["新保","興南","秋ヶ島、押上、上栗山、上八日町、経田、才覚寺、下栗山、新保、惣在寺、大利、塚原、任海、友杉、南央町、西荒屋、萩原、福居、別名、南栗山、南中田、吉倉"],
+["熊野","興南","青柳新、悪王寺、安養寺、石田、石田万葉台、上野、上野寿町、上野南町、江本、上熊野、上栄、経力、小中、島田、下熊野、下千俵、杉瀬、千俵町、辰尾、辰尾新町1区～3区、珠泉西町、珠泉東町、林崎、牧田、南金屋、宮保、森田、吉岡、若竹町一丁目～六丁目"],
+["月岡","月岡","青柳、大井、開発、上今町、上千俵、上千俵町、上布目、月岡西緑町、月岡東緑町一丁目～四丁目、月岡町一丁目～七丁目、月見町一丁目～七丁目、中布目"],
+["四方","和合","四方、四方荒屋、四方一番町、四方江代町、四方恵比須町、四方北窪、四方新出町、四方神明町、四方田町、四方茶園町、四方西岩瀬、四方西野割町、四方西港町、四方二番町、四方東野割町、四方東港町、四方南町、つばめ野三丁目"],
+["八幡","和合","今市、田尻、寺島、利波、八町、八町東、百塚、松木、宮尾、八幡、八幡新町"],
+["草島","和合","金山新、金山新桜ヶ丘、金山新東、草島、草島新町、富浦町"],
+["倉垣","和合","打出、布目、布目旭、布目新町、布目東町、布目緑町、布目南町、つばめ野一丁目～二丁目"],
+["呉羽","呉羽","追分茶屋、呉羽苑、呉羽川西、呉羽貴舟巻、呉羽昭和町、呉羽新富田町、呉羽つつじが丘、呉羽富田町、呉羽中の町、呉羽東町、呉羽姫本、呉羽本町、呉羽丸富町、呉羽水上町、呉羽三ツ塚、住吉、高木、茶屋新町、茶屋町、花木、吉作、吉作新町"],
+["長岡","呉羽","北代1区～6区、北代新、北代藤ヶ丘、長岡、長岡新、八ヶ山"],
+["寒江","呉羽","大塚、北二ツ屋、呉羽野田、中沖、野口、野町、本郷"],
+["古沢","呉羽","境野新、杉谷、栃谷、西金屋、古沢"],
+["老田","呉羽","願海寺、願海寺新町、中老田、西二俣、野々上、東老田"],
+["池多","呉羽","池多、北押川、坂下新、三熊、西押川、平岡、開ヶ丘、山本"],
+["水橋中部","水橋","水橋朝日町、水橋市江、水橋市江新町、水橋稲荷町、水橋新大町、水橋新舘町、水橋新町、水橋地蔵町、水橋田町、水橋中大町、水橋中出町、水橋中村栄町、水橋中村新町、水橋中村町、水橋西天神町、水橋西出町、水橋西浜町、水橋東舘町、水橋東浜町、水橋東天神町、水橋東出町、水橋明治町、水橋館町、水橋柳寺"],
+["水橋西部","水橋","水橋荒町、水橋今町、水橋印田町、水橋駅前、水橋川原町、水橋山王町、水橋昭和町、水橋新堂町、水橋新保、水橋新保新町、水橋大正町、水橋立山町、水橋辻ヶ堂、水橋中町、水橋西大町、水橋畠等町、水橋花の井町、水橋浜町"],
+["水橋東部","水橋","水橋石政、水橋伊勢領、水橋開発町、水橋鏡田、水橋堅田、水橋上桜木、水橋上砂子坂、水橋狐塚、水橋小池、水橋恋塚、水橋高志園町、水橋五郎丸、水橋桜木、水橋下砂子坂、水橋下砂子坂新"],
+["三成","三成","水橋池田舘、水橋池田町、水橋伊勢屋、水橋市田袋、水橋入江、水橋沖、水橋肘崎、水橋開発、水橋金尾、水橋金尾新、水橋上的場、水橋柴草、水橋小路、水橋新堀、水橋常願寺、水橋高堂、水橋中新町、水橋中村、水橋入部町、水橋番頭名、水橋二杉、水橋二ッ屋、水橋的場、水橋石割、水橋金広、水橋北馬場、水橋小出裏坪、水橋小出表坪、水橋小出上屋、水橋小出東町、水橋佐野竹、水橋清水堂、水橋上条新町、水橋専光寺、水橋大正南部、水橋大正北部、水橋高寺、水橋田伏、水橋中馬場、水橋平塚、水橋曲淵"],
+["大沢野","大沢野","牛ケ増、笹津1区～7区、春日長走、下夕林、西大沢1区～3区、敷紡寮、高内1区～2区、カーボン2区、幸町1区～2区、八木山1区～3区、上大久保1区～4区、稲代1区～2区、上大久保栄町、上大久保北新町、上大久保東新町、長附1区～7区、南花園町、加納、西塩野、岩木、岩木新、上ニ杉1区～3区、須原、長川原、小羽、葛原、下伏、土、根上"],
+["大久保","大沢野","上大久保5区～6区、上大久保泉町、下大久保1区～6区、下大久保東ケ丘、下大久保新町、若草町、新村、合田、東大久保、中大久保、神通、塩、下大久保緑町、大久保新町、下大久保若葉台"],
+["船峅","大沢野","寺家、市場、直坂、横樋、大野、南野田、坂本1区～2区、セーナー苑、ニ松、万願寺、万開、松野、小黒"],
+["上滝","上滝","大山上野、新上野、上滝緑町、上新町、上滝東新町、上滝東町、六間町、大山北新町、中町、川端町、中滝、三室荒屋、中滝団地、中ノ寺団地、新栄町、新曙町、文珠寺、東小俣、西小俣、長瀬、手出、赤倉、河内、小原、穏土、安蔵、新町、岡田、中番(字小杉割・桑原割・草履田割の一部のみ)、大山松木、牧、才覚地、水須、中地山"],
+["大庄","上滝","田畠、善名、下番、下番新町、馬瀬口、中番(字小杉割・桑原割・草履田割の一部を除く)、旭ケ丘、小原屋、大栗、花崎、上大浦、中大浦、下大浦、桑原、南大場、殿様林、津羽見、はなさき苑、風見台、明日美野、グリーンコア大山、青葉台、花みず木台、たばたけ寿町、つくし野"],
+["福沢","上滝","東福沢1区～7区、火土呂、中央農高、福沢中央住宅、小佐波、牧野、大山布目、東黒牧、楜ヶ原、小谷、砂見、芋平、日尾、瀬戸、馬瀬、石渕、下双嶺、大清水、大双嶺、小坂、東黒牧上野、東福沢住宅団地、津毛、福沢団地、千長原、長棟、奥山"],
+["小見","上滝","和田、小見、亀谷、有峰、本宮、粟巣野、原、本宮はなきり、中地山亀谷入会、小見和田入会、小見亀谷入会"],
+["八尾","八尾","八尾町東町、八尾町西町、八尾町鏡町、八尾町上新町、八尾町諏訪町、八尾町西新町、八尾町東新町、八尾町今町、八尾町下新町、八尾町天満町、八尾町妙川寺(一部・別図面あり)、八尾町福島元村、八尾町福島上野、八尾町福島上野市営住宅、八尾町八尾園、八尾町福島第一～第四、八尾町保内二丁目、八尾町上井田新、八尾町下笹原、八尾町掛畑、八尾町上黒瀬、八尾町小原滝脇、八尾町桐谷、八尾町小井波、八尾町上笹原、八尾町茗ケ原、八尾町角間、八尾町梅苑町、八尾町高熊元村、八尾町高熊落合、八尾町高熊団地、八尾町谷橋、八尾町中、八尾町河西、八尾町西玉、八尾町河筋、八尾町坂尾、八尾町中筋、八尾町河東、八尾町足谷、八尾町小長谷台地、八尾町小長谷元村(一部・別図面あり)、八尾町神明、八尾町北玉、八尾町三和、八尾町乗峯、八尾町青根、八尾町西川倉、八尾町東川倉、八尾町東布谷、八尾町布谷、八尾町赤石、八尾町松瀬、八尾町野積園、八尾町のりみね苑、八尾町大下、八尾町下仁歩、八尾町中仁歩、八尾町上仁歩、八尾町入谷、八尾町平沢、八尾町三ツ松、八尾町倉ケ谷、八尾町正間、八尾町大玉生、八尾町尾畑、八尾町武道原、八尾町清花、八尾町栃折、八尾町中栗、八尾町上牧、八尾町島地、八尾町内名、八尾町西高田、八尾町新東、八尾町庵杉、八尾町小長谷雇用促進、八尾町新杉、八尾町樫尾、八尾町岩屋、八尾町宮腰、八尾町外堀、八尾町北東、八尾町晴巒台"],
+["杉原","八尾","八尾町黒田、八尾町井田、八尾町上井田、八尾町下井田新、八尾町寺家、八尾町杉田、八尾町大杉、八尾町滅鬼、八尾町薄島、八尾町野飼、八尾町西神通、八尾町中神通、八尾町城生、八尾町井栗谷、八尾町深谷、八尾町丸山"],
+["保内","八尾","八尾町高善寺、八尾町舘、八尾町本郷、八尾町田中、八尾町翠尾、八尾町奥田、八尾町奥田夢タウン、八尾町椿寿荘、八尾町三田、八尾町三田城が丘、八尾町平林、八尾町松原、八尾町上新田、八尾町中新田、八尾町下新田、八尾町水谷、八尾町妙川寺(一部を除く・別図面あり)、八尾町妙川寺市営住宅、八尾町石戸、八尾町上高善寺、八尾町保内一丁目、八尾町保内三丁目、八尾町テクノタウン、八尾町水谷望岳台"],
+["速星","速星","婦中町笹倉1区～5区、婦中町笹倉8区、婦中町笹倉11区、婦中町笹倉13区、婦中町麦島、婦中町袋、婦中町砂子田1区～5区、婦中町板倉、婦中町増田、婦中町速星1区～5区、婦中町蛍川、婦中町希来里、婦中町西ヶ丘、婦中町響の杜"],
+["鵜坂","速星","婦中町下轡田、婦中町上轡田、婦中町塚原、婦中町分田、婦中町鵜坂、婦中町羽根新、婦中町田島、婦中町上田島、婦中町東本郷、婦中町西本郷、婦中町宮ヶ島、婦中町宮ヶ島団地、婦中町下坂倉、婦中町雇用促進下坂倉、婦中町島本郷、婦中町希望ヶ丘、婦中町パークタウン西本郷、婦中町雇用促進西本郷、婦中町夢ヶ丘"],
+["朝日","速星","婦中町安田、婦中町小泉、婦中町下下条、婦中町上下条、婦中町下友坂、婦中町上友坂、婦中町総野"],
+["宮野","速星","婦中町広田1区～4区、婦中町浜子、婦中町中島、婦中町余川東、婦中町田屋、婦中町地角、婦中町新屋、婦中町横野、婦中町成子、婦中町中名、婦中町道場、婦中町下井沢、婦中町清水島、婦中町堀、婦中町道喜島、婦中町十五丁、婦中町為成新、婦中町青島、婦中町萩島、婦中町持田、婦中町添島、婦中町蔵島、婦中町ねむの木"],
+["古里","城山","婦中町長沢(長沢字狐坂13227～13452番地の地区を除く)、婦中町羽根、婦中町下邑、婦中町小長沢、婦中町新町、婦中町蓮花寺、婦中町高塚、婦中町宮ヶ谷、婦中町長沢団地、富山病院、友愛病院、婦中町ひまわり台、婦中町外北(外輪野1455番地3、外輪野字鏡坂11937～12685番地の地区のみ)"],
+["音川","城山","婦中町下瀬、婦中町三和、婦中町外南、婦中町西上、婦中町扶養、婦中町外中、婦中町八下、婦中町大構、婦中町中保屋、婦中町瑞穂、婦中町外北(外輪野1455番地3、外輪野字鏡坂11937～12685番地の地区を除く)、婦中町上瀬、婦中町三瀬・高山、婦中町道島・上野、婦中町皆杓、婦中町牛滑、婦中町大瀬谷、婦中町葎原、婦中町鶚谷、婦中町吉谷、婦中町平等、婦中町吉住、婦中町東谷、婦中町東山、婦中町細谷、婦中町円山、婦中町長沢(長沢字狐坂13227～13452番地の地区のみ)"],
+["神保","城山","婦中町千里西部、婦中町千里南部、婦中町千里北部、婦中町千里東部、婦中町小倉、婦中町熊野道、婦中町島田、婦中町上井沢、婦中町高日附、婦中町余川西、婦中町富崎、婦中町河原町、婦中町上吉川、婦中町下吉川、婦中町富川、婦中町千里団地、婦中町上吉川ニュータウン、婦中町かたかご台、婦中町千里グリーンハイツ、婦中町高日附学園台"],
+["山田","山田","山田高清水、山田深道、山田数納、山田若狭、山田居舟、山田鍋谷、山田谷、山田若土、山田鎌倉、山田小谷、山田赤目谷、山田北山、山田湯、山田中村、山田小島、山田城山、山田上中瀬、山田竹の内、山田中瀬、山田白井谷、山田前田、山田沼又、山田牧、山田清水、山田今山田、山田宿坊、山田沢連、山田柳川、山田大山"],
+["神通碧","楡原","東猪谷、舟渡、小糸、伏木、吉野、寺津、町長、布尻、今生津、芦生、西笹津、岩稲、割山、楡原、楡原1区、楡原高田、楡原3区、庵谷、片掛、猪谷、三井アパート、蟹寺、加賀沢"]
+];
+</script>
+<script>
+/* ══════════ 学区判定 ══════════ */
+const K2N={一:1,二:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9,十:10};
+const N2K=["","一","二","三","四","五","六","七","八","九","十"];
+function kanjiNum(s){
+  if(/^\d+$/.test(s))return parseInt(s,10);
+  if(s.length===1)return K2N[s]||null;
+  let m=s.match(/^十([一二三四五六七八九])$/); if(m)return 10+K2N[m[1]];
+  m=s.match(/^([一二三四五六七八九])十([一二三四五六七八九])?$/);
+  if(m)return K2N[m[1]]*10+(m[2]?K2N[m[2]]:0);
+  return null;
+}
+function numToSame(n,sample){
+  if(/^\d+$/.test(sample))return String(n);
+  if(n<=10)return N2K[n];
+  if(n<20)return "十"+N2K[n-10];
+  return N2K[Math.floor(n/10)]+"十"+(n%10?N2K[n%10]:"");
+}
+const RANGE=/^(.*?)(第?)([0-9]+|[一二三四五六七八九十]+)(丁目|区|)～(第?)([0-9]+|[一二三四五六七八九十]+)(丁目|区|)$/;
+function expandToken(tok){
+  let caution=null,base=tok;
+  const p=tok.indexOf("(");
+  if(p>=0){caution=tok.slice(p+1).replace(/\)$/,"");base=tok.slice(0,p);}
+  const m=base.match(RANGE);
+  if(m){
+    const[,pre,d1,a,s1,d2,b,s2]=m, na=kanjiNum(a), nb=kanjiNum(b);
+    const suf=s1||s2, dai=d1||d2;
+    if(na!=null&&nb!=null&&nb>=na&&nb-na<40){
+      const out=[];
+      for(let i=na;i<=nb;i++)out.push({name:pre+dai+numToSame(i,a)+suf,caution});
+      return out;
+    }
+  }
+  return [{name:base,caution}];
+}
+function normTown(s){
+  let t=s.replace(/\s/g,"").replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
+  return t.replace(/(\d+)丁目/g,(_,n)=>numToSame(parseInt(n,10),"一")+"丁目");
+}
+function normAddress(s){
+  let t=s.replace(/\s|　/g,"").replace(/[０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
+  t=t.replace(/[‐‑‒–—―ー－]/g,"-").replace(/^日本[,、]?/,"").replace(/^〒?\d{3}-?\d{4}/,"");
+  t=t.replace(/富山県/,"").replace(/富山市/,"");
+  t=t.replace(/(\d+)-(\d+)(-(\d+))?/,(mm,a,b,_c,d)=>numToSame(parseInt(a,10),"一")+"丁目"+b+"番"+(d?d+"号":""));
+  return t.replace(/(\d+)丁目/g,(_,n)=>numToSame(parseInt(n,10),"一")+"丁目");
+}
+const TOWN=new Map(), TOWNBASE=new Map();
+(function(){
+  for(const[e,m,towns]of GAKKU_RAW){
+    for(const raw of towns.split("、")){
+      const tok=raw.trim(); if(!tok)continue;
+      for(const{name,caution}of expandToken(tok)){
+        const k=normTown(name); if(!k)continue;
+        if(!TOWN.has(k))TOWN.set(k,[]);
+        const a=TOWN.get(k);
+        if(!a.some(x=>x.e===e&&x.m===m&&x.caution===caution))a.push({e,m,caution,src:name});
+      }
+    }
+  }
+  for(const[k,v]of TOWN){
+    const b=k.replace(/(第?[0-9一二三四五六七八九十]+区?)?(西部|東部|南部|北部|中部)?$/,"");
+    if(!b||b===k)continue;
+    if(!TOWNBASE.has(b))TOWNBASE.set(b,[]);
+    for(const x of v)if(!TOWNBASE.get(b).some(y=>y.e===x.e&&y.m===x.m))TOWNBASE.get(b).push(x);
+  }
+})();
+function lookupGakku(addr){
+  const a=normAddress(addr);
+  let best=null;
+  for(const k of TOWN.keys())if(a.startsWith(k)&&(!best||k.length>best.length))best=k;
+  if(best)return{matched:best,hits:TOWN.get(best),mode:"exact"};
+  let bb=null;
+  for(const k of TOWNBASE.keys())if(a.startsWith(k)&&(!bb||k.length>bb.length))bb=k;
+  if(bb)return{matched:bb,hits:TOWNBASE.get(bb),mode:"base"};
+  return{matched:null,hits:[],mode:"none"};
+}
+const ALLPAIRS=(()=>{const s=new Set();for(const[e,m]of GAKKU_RAW)s.add(e+"|"+m);return[...s].sort();})();
+
+/* ══════════ 設定 ══════════ */
+const CATS=[
+ {id:"youji",  label:"幼稚園・保育園", types:["preschool"],                     r:1500, on:true},
+ {id:"conv",   label:"コンビニ",       types:["convenience_store"],             r:1500, on:true},
+ {id:"super",  label:"スーパー",       types:["supermarket"],                   r:2500, on:true},
+ {id:"drug",   label:"ドラッグストア", types:["drugstore","pharmacy"],          r:2500, on:true},
+ {id:"sc",     label:"SC",             types:["shopping_mall"],                 r:4000, on:true},
+ {id:"post",   label:"郵便局",         types:["post_office"],                   r:2500, on:true},
+ {id:"bank",   label:"銀行",           types:["bank"],                          r:2500, on:true},
+ {id:"hosp",   label:"病院・クリニック",types:["hospital"],                     r:3000, on:true},
+ {id:"park",   label:"公園",           types:["park"],                          r:1200, on:false},
+];
+const WALK=m=>Math.max(1,Math.ceil(m/80));
+const $=s=>document.querySelector(s);
+const state={origin:null,addr:"",sho:null,chu:null,cands:[],rows:[],station:null,bus:null,zoom:16,base:"gsi",img:null,tainted:false};
+
+function say(t,kind){const e=$("#msg");e.className="status on "+(kind||"info");e.innerHTML=t;}
+function hideMsg(){$("#msg").className="status";}
+
+/* ══════════ Google API ══════════ */
+let gReady=null;
+function loadGoogle(key){
+  if(gReady)return gReady;
+  gReady=new Promise((res,rej)=>{
+    window.__gcb=()=>res();
+    const s=document.createElement("script");
+    s.src="https://maps.googleapis.com/maps/api/js?key="+encodeURIComponent(key)+
+          "&libraries=places,geocoding,routes&language=ja&region=JP&loading=async&callback=__gcb";
+    s.onerror=()=>rej(new Error("Google Maps の読み込みに失敗しました。APIキーとリファラー制限を確認してください。"));
+    document.head.appendChild(s);
+  });
+  return gReady;
+}
+async function geocode(addr){
+  const {Geocoder}=await google.maps.importLibrary("geocoding");
+  const q=/富山市/.test(addr)?addr:("富山市"+addr);
+  const r=await new Geocoder().geocode({address:"富山県"+q.replace(/^富山県/,""),region:"jp",componentRestrictions:{country:"JP"}});
+  if(!r.results||!r.results.length)throw new Error("住所が特定できませんでした。表記を変えて試してください。");
+  const g=r.results[0];
+  return{lat:g.geometry.location.lat(),lng:g.geometry.location.lng(),formatted:g.formatted_address};
+}
+async function nearby(center,types,radius,n){
+  const {Place,SearchNearbyRankPreference}=await google.maps.importLibrary("places");
+  try{
+    const{places}=await Place.searchNearby({
+      fields:["displayName","location"],
+      locationRestriction:{center:new google.maps.LatLng(center.lat,center.lng),radius:radius},
+      includedPrimaryTypes:types, maxResultCount:n||5,
+      rankPreference:SearchNearbyRankPreference.DISTANCE, language:"ja", region:"jp"
+    });
+    return places.map(p=>({name:p.displayName,lat:p.location.lat(),lng:p.location.lng()}));
+  }catch(e){console.warn("nearby失敗",types,e);return[];}
+}
+async function findPlace(q,center){
+  const {Place}=await google.maps.importLibrary("places");
+  try{
+    const{places}=await Place.searchByText({
+      textQuery:q, fields:["displayName","location"], maxResultCount:1, language:"ja", region:"jp",
+      locationBias:{center:new google.maps.LatLng(center.lat,center.lng),radius:20000}
+    });
+    if(!places.length)return null;
+    const p=places[0];
+    return{name:p.displayName,lat:p.location.lat(),lng:p.location.lng()};
+  }catch(e){console.warn("findPlace失敗",q,e);return null;}
+}
+function haversine(a,b){
+  const R=6371000,t=Math.PI/180;
+  const dl=(b.lat-a.lat)*t,dg=(b.lng-a.lng)*t;
+  const x=Math.sin(dl/2)**2+Math.cos(a.lat*t)*Math.cos(b.lat*t)*Math.sin(dg/2)**2;
+  return 2*R*Math.asin(Math.sqrt(x));
+}
+async function walkDistances(origin,list){
+  const {DistanceMatrixService}=await google.maps.importLibrary("routes");
+  const svc=new DistanceMatrixService();
+  const out=new Array(list.length).fill(null);
+  for(let i=0;i<list.length;i+=25){
+    const chunk=list.slice(i,i+25);
+    try{
+      const res=await svc.getDistanceMatrix({
+        origins:[new google.maps.LatLng(origin.lat,origin.lng)],
+        destinations:chunk.map(p=>new google.maps.LatLng(p.lat,p.lng)),
+        travelMode:google.maps.TravelMode.WALKING,
+        unitSystem:google.maps.UnitSystem.METRIC
+      });
+      res.rows[0].elements.forEach((el,j)=>{
+        out[i+j]=(el.status==="OK")?el.distance.value:null;
+      });
+    }catch(e){console.warn("距離計算失敗",e);}
+  }
+  // 経路が取れなかった分は直線距離×1.25で補完
+  return out.map((v,i)=>v!=null?{m:v,est:false}:{m:Math.round(haversine(origin,list[i])*1.25),est:true});
+}
+
+/* ══════════ メイン処理 ══════════ */
+async function run(){
+  const key=$("#key").value.trim();
+  const addr=$("#addr").value.trim();
+  if(!addr){say("住所を入力してください。","err");return;}
+  if(!key){say("Google APIキーを入力してください。","err");return;}
+  $("#run").disabled=true;$("#run").innerHTML='<span class="spin"></span> 調査中…';
+  try{
+    say("Google Maps に接続しています…");
+    await loadGoogle(key);
+
+    // 1. 学区
+    const gk=lookupGakku(addr);
+    renderSchoolBox(gk,addr);
+
+    // 2. ジオコーディング
+    say("住所を地図上で特定しています…");
+    const o=await geocode(addr);
+    state.origin=o;state.addr=addr;
+    $("#matchinfo").textContent="判定に使った住所："+o.formatted;
+
+    if(!gk.hits.length){
+      say("この住所は通学区域表に見つかりませんでした。学区を手動で選んでください。","err");
+    }
+    const pair=currentPair();
+
+    // 3. 学校の位置
+    say("学校と周辺施設を検索しています…");
+    const shoName=pair.e?"富山市立"+pair.e+"小学校":"（学区未選択）";
+    const chuName=pair.m?"富山市立"+pair.m+"中学校":"（学区未選択）";
+    const [shoP,chuP]=await Promise.all([
+      pair.e?findPlace(shoName,o):Promise.resolve(null),
+      pair.m?findPlace(chuName,o):Promise.resolve(null)
+    ]);
+
+    // 4. 周辺施設
+    const jobs=CATS.filter(c=>c.on).map(async c=>{
+      const ps=await nearby(o,c.types,c.r,5);
+      return ps.map(p=>({...p,cat:c.id,catLabel:c.label}));
+    });
+    const staJob=nearby(o,["train_station","light_rail_station","subway_station"],4000,3);
+    const busJob=nearby(o,["bus_stop","bus_station"],1500,4);
+    const [catRes,stas,buses]=await Promise.all([Promise.all(jobs),staJob,busJob]);
+
+    // 5. 道路距離をまとめて計算
+    say("道路距離を計算しています…");
+    const all=[];
+    if(shoP)all.push({...shoP,cat:"sho",catLabel:"小学校",fixed:true});
+    if(chuP)all.push({...chuP,cat:"chu",catLabel:"中学校",fixed:true});
+    catRes.flat().forEach(p=>all.push(p));
+    stas.forEach(p=>all.push({...p,cat:"_sta",catLabel:"駅"}));
+    buses.forEach(p=>all.push({...p,cat:"_bus",catLabel:"バス停"}));
+    const ds=await walkDistances(o,all);
+    all.forEach((p,i)=>{p.m=ds[i].m;p.est=ds[i].est;p.mins=WALK(p.m);});
+
+    state.sho=all.find(p=>p.cat==="sho")||{name:shoName,m:0,mins:0,missing:true};
+    state.chu=all.find(p=>p.cat==="chu")||{name:chuName,m:0,mins:0,missing:true};
+    if(state.sho.missing)state.sho.name=shoName;
+    if(state.chu.missing)state.chu.name=chuName;
+    state.cands=all.filter(p=>!p.fixed&&p.cat[0]!=="_").sort((a,b)=>a.m-b.m);
+    const sr=all.filter(p=>p.cat==="_sta").sort((a,b)=>a.m-b.m);
+    const br=all.filter(p=>p.cat==="_bus").sort((a,b)=>a.m-b.m);
+    state.station=sr[0]||null;state.bus=br[0]||null;
+
+    pickRows();
+    renderTrans();renderFac();
+    $("#c-trans").classList.remove("hide");
+    $("#c-fac").classList.remove("hide");
+    $("#c-map").classList.remove("hide");
+    autoZoom();drawMap();
+    if(gk.hits.length)say("調査が完了しました。地図と一覧を確認してください。","ok");
+  }catch(e){
+    console.error(e);say(e.message||String(e),"err");
+  }finally{
+    $("#run").disabled=false;$("#run").textContent="調査する";
+  }
+}
+
+function currentPair(){
+  const v=$("#pick").value;
+  if(v){const[e,m]=v.split("|");return{e,m};}
+  return{e:"",m:""};
+}
+function renderSchoolBox(gk,addr){
+  $("#c-school").classList.remove("hide");
+  const sel=$("#pick");
+  if(!sel.options.length){
+    sel.innerHTML='<option value="">— 未選択 —</option>'+
+      ALLPAIRS.map(p=>{const[e,m]=p.split("|");return `<option value="${p}">${e}小学校 ／ ${m}中学校</option>`;}).join("");
+  }
+  const warnBox=$("#school-warn");warnBox.innerHTML="";
+  if(gk.hits.length){
+    sel.value=gk.hits[0].e+"|"+gk.hits[0].m;
+    const cautions=gk.hits.filter(h=>h.caution);
+    if(gk.hits.length>1||cautions.length){
+      const list=gk.hits.map(h=>`${h.e}小学校／${h.m}中学校${h.caution?`（${h.caution}）`:""}`).join("<br>");
+      warnBox.innerHTML=`<div class="warn"><b>⚠ 番地により学区が分かれます。必ず確認してください。</b>
+        <div class="note">「${gk.matched}」の候補：<br>${list}</div></div>`;
+    }
+    if(gk.mode==="base"){
+      warnBox.innerHTML+=`<div class="warn" style="border-left-color:#B8860B;background:#FDF8E8">
+        <b>町名は「${gk.matched}」で照合しました。</b><div class="note">区分（○区・○部）まで一致していません。表と照らし合わせてください。</div></div>`;
+    }
+    $("#school-pick").classList.remove("hide");
+  }else{
+    warnBox.innerHTML=`<div class="warn"><b>通学区域表に該当がありません。</b>
+      <div class="note">「${normAddress(addr)}」で照合しました。下の一覧から手動で選んでください。</div></div>`;
+    $("#school-pick").classList.remove("hide");
+  }
+  syncSchoolLabels();
+}
+function syncSchoolLabels(){
+  const p=currentPair();
+  $("#v-sho").textContent=p.e?p.e+"小学校":"－";
+  $("#v-chu").textContent=p.m?p.m+"中学校":"－";
+}
+
+function pickRows(){
+  const dup=$("#allowdup").checked;
+  const used=new Set(),sel=[];
+  for(const c of state.cands){
+    if(sel.length>=6)break;
+    if(!dup&&used.has(c.cat))continue;
+    used.add(c.cat);sel.push(c);
+  }
+  state.rows=[
+    {...state.sho,catLabel:"小学校",must:true,show:true},
+    {...state.chu,catLabel:"中学校",must:true,show:true},
+    ...sel.map((c,i)=>({...c,must:false,show:i<parseInt($("#mapn").value,10)}))
+  ];
+}
+function renderFac(){
+  const tb=$("#fac-body");tb.innerHTML="";
+  state.rows.forEach((r,i)=>{
+    const tr=document.createElement("tr");
+    if(r.must)tr.className="must";
+    const others=state.cands.filter(c=>!state.rows.some((x,j)=>j!==i&&x.name===c.name));
+    const groups={};
+    others.forEach(c=>{(groups[c.catLabel]=groups[c.catLabel]||[]).push(c);});
+    const opts=Object.entries(groups).map(([g,list])=>
+      `<optgroup label="${g}">`+list.map(c=>
+        `<option value="${c.name}"${c.name===r.name?" selected":""}>${c.name}（${c.mins}分）</option>`).join("")+`</optgroup>`).join("");
+    tr.innerHTML=`
+      <td class="ctl"><input type="checkbox" data-i="${i}" class="showchk" ${r.show?"checked":""}></td>
+      <td><span class="tag ${r.must?"must":""}">${r.catLabel}</span></td>
+      <td><span class="fname">${r.name||"－"}</span>${r.est?' <span class="tag">直線推定</span>':""}${r.missing?' <span class="tag">位置不明</span>':""}</td>
+      <td><div class="mins">${r.mins||"－"}<small>分</small></div><div class="dist">${r.m?r.m+"m":""}</div></td>
+      <td>${r.must?'<span style="font-size:13px;color:#8A97A5">固定</span>':`<select class="swap" data-i="${i}">${opts}</select>`}</td>`;
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll(".swap").forEach(s=>s.onchange=e=>{
+    const i=+e.target.dataset.i, c=state.cands.find(x=>x.name===e.target.value);
+    if(c){state.rows[i]={...c,must:false,show:state.rows[i].show};renderFac();drawMap();}
+  });
+  tb.querySelectorAll(".showchk").forEach(s=>s.onchange=e=>{
+    state.rows[+e.target.dataset.i].show=e.target.checked;drawMap();
+  });
+}
+function renderTrans(){
+  $("#v-sta").textContent=state.station?state.station.name:"見つかりませんでした";
+  $("#m-sta").textContent=state.station?`徒歩${state.station.mins}分（${state.station.m}m）`:"";
+  $("#v-bus").textContent=state.bus?state.bus.name:"見つかりませんでした";
+  $("#m-bus").textContent=state.bus?`徒歩${state.bus.mins}分（${state.bus.m}m）`:"";
+}
+
+/* ══════════ 地図 ══════════ */
+const OUT_W=1092,OUT_H=712;               // 9.2×6cm 相当（約300dpi）
+const MAXZ={pale:16,std:18};
+function project(lat,lng,z){
+  const s=256*Math.pow(2,z);
+  const sy=Math.sin(lat*Math.PI/180);
+  return{x:(lng+180)/360*s, y:(0.5-Math.log((1+sy)/(1-sy))/(4*Math.PI))*s};
+}
+function mapPoints(){
+  const p=[{...state.origin,kind:"prop"}];
+  state.rows.forEach((r,i)=>{if(r.show&&r.lat)p.push({lat:r.lat,lng:r.lng,kind:"fac",n:i+1});});
+  return p;
+}
+function autoZoom(){
+  const pts=mapPoints();
+  for(let z=18;z>=12;z--){
+    const ps=pts.map(p=>project(p.lat,p.lng,z));
+    const w=Math.max(...ps.map(p=>p.x))-Math.min(...ps.map(p=>p.x));
+    const h=Math.max(...ps.map(p=>p.y))-Math.min(...ps.map(p=>p.y));
+    if(w<OUT_W-80&&h<OUT_H-80){state.zoom=z;$("#zval").textContent=z;return;}
+  }
+  state.zoom=12;$("#zval").textContent=12;
+}
+function mapCenter(){
+  const z=state.zoom,pts=mapPoints();
+  const ps=pts.map(p=>project(p.lat,p.lng,z));
+  const cx=(Math.min(...ps.map(p=>p.x))+Math.max(...ps.map(p=>p.x)))/2;
+  const cy=(Math.min(...ps.map(p=>p.y))+Math.max(...ps.map(p=>p.y)))/2;
+  const s=256*Math.pow(2,z);
+  const lng=cx/s*360-180;
+  const n=Math.PI-2*Math.PI*cy/s;
+  const lat=180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n)));
+  return{lat,lng};
+}
+function drawPins(ctx,center,z){
+  const c=project(center.lat,center.lng,z), L=c.x-OUT_W/2, T=c.y-OUT_H/2;
+  const num=$("#numlabel").checked;
+  for(const p of mapPoints()){
+    const q=project(p.lat,p.lng,z), x=q.x-L, y=q.y-T;
+    if(x<-20||x>OUT_W+20||y<-20||y>OUT_H+20)continue;
+    const isProp=p.kind==="prop", r=isProp?9:7;
+    ctx.beginPath();ctx.arc(x,y,r+2.5,0,7);ctx.fillStyle="#fff";ctx.fill();
+    ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fillStyle=isProp?"#C62828":"#E8730C";ctx.fill();
+    if(isProp){ctx.beginPath();ctx.arc(x,y,3,0,7);ctx.fillStyle="#fff";ctx.fill();}
+    else if(num){ctx.fillStyle="#fff";ctx.font="bold 11px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(String(p.n),x,y+.5);}
+  }
+}
+const tileProbe={};
+function probeTile(layer,z,lat,lng){            // そのズームのタイルが実在するか一度だけ試す
+  const key=layer+"/"+z;
+  if(key in tileProbe)return Promise.resolve(tileProbe[key]);
+  const n=Math.pow(2,z), p=project(lat,lng,z);
+  const tx=Math.floor(p.x/256), ty=Math.floor(p.y/256);
+  return new Promise(res=>{
+    const im=new Image();
+    im.onload=()=>{tileProbe[key]=true;res(true);};
+    im.onerror=()=>{tileProbe[key]=false;res(false);};
+    im.src=`https://cyberjapandata.gsi.go.jp/xyz/${layer}/${z}/${((tx%n)+n)%n}/${ty}.png`;
+  });
+}
+async function drawGsi(){
+  const z=state.zoom, layer=$("#gsistd").checked?"std":"pale";
+  const center=mapCenter();
+  let tz=Math.min(z,MAXZ[layer]);
+  if(z>tz && await probeTile(layer,z,center.lat,center.lng)) tz=z;   // 実在すればそのまま使う
+  const k=Math.pow(2,z-tz);   // 足りない分だけ拡大
+  const cv=document.createElement("canvas");cv.width=OUT_W;cv.height=OUT_H;
+  const ctx=cv.getContext("2d");
+  ctx.fillStyle="#fff";ctx.fillRect(0,0,OUT_W,OUT_H);
+  const c=project(center.lat,center.lng,tz), L=c.x-OUT_W/(2*k), T=c.y-OUT_H/(2*k);
+  const n=Math.pow(2,tz), TS=256;
+  const jobs=[];
+  for(let tx=Math.floor(L/TS);tx<=Math.floor((L+OUT_W/k)/TS);tx++){
+    for(let ty=Math.floor(T/TS);ty<=Math.floor((T+OUT_H/k)/TS);ty++){
+      if(ty<0||ty>=n)continue;
+      const wx=((tx%n)+n)%n;
+      jobs.push(new Promise(res=>{
+        const im=new Image();im.crossOrigin="anonymous";
+        im.onload=()=>{ctx.drawImage(im,(tx*TS-L)*k,(ty*TS-T)*k,TS*k,TS*k);res();};
+        im.onerror=()=>res();
+        im.src=`https://cyberjapandata.gsi.go.jp/xyz/${layer}/${tz}/${wx}/${ty}.png`;
+      }));
+    }
+  }
+  await Promise.all(jobs);
+  drawPins(ctx,center,z);
+  // 出典表記（地理院タイル利用の必須事項）
+  ctx.font="bold 15px sans-serif";ctx.textAlign="right";ctx.textBaseline="bottom";
+  const t="出典：国土地理院ウェブサイト（地理院タイル）";
+  const w=ctx.measureText(t).width;
+  ctx.fillStyle="rgba(255,255,255,.88)";ctx.fillRect(OUT_W-w-14,OUT_H-26,w+12,22);
+  ctx.fillStyle="#333";ctx.fillText(t,OUT_W-8,OUT_H-8);
+  state.tainted=false;
+  showMap(cv);
+}
+function drawGoogle(){
+  const z=state.zoom,center=mapCenter(),key=$("#key").value.trim();
+  const mk=[`markers=size:small%7Ccolor:0xC62828%7C${state.origin.lat.toFixed(6)},${state.origin.lng.toFixed(6)}`];
+  const facs=mapPoints().filter(p=>p.kind==="fac");
+  if(facs.length)mk.push("markers=size:tiny%7Ccolor:0xE8730C%7C"+facs.map(p=>`${p.lat.toFixed(6)},${p.lng.toFixed(6)}`).join("%7C"));
+  const url=`https://maps.googleapis.com/maps/api/staticmap?center=${center.lat.toFixed(6)},${center.lng.toFixed(6)}`+
+    `&zoom=${z}&size=546x356&scale=2&maptype=roadmap&language=ja&region=JP&${mk.join("&")}&key=${encodeURIComponent(key)}`;
+  const im=new Image();im.crossOrigin="anonymous";
+  im.onload=()=>{
+    const cv=document.createElement("canvas");cv.width=im.naturalWidth;cv.height=im.naturalHeight;
+    try{cv.getContext("2d").drawImage(im,0,0);cv.toDataURL();state.tainted=false;showMap(cv);}
+    catch(e){state.tainted=true;showMap(im);}
+  };
+  im.onerror=()=>{
+    const p=new Image();
+    p.onload=()=>{state.tainted=true;showMap(p);};
+    p.onerror=()=>say("Static Maps の取得に失敗しました。Maps Static API が有効になっているか確認してください。","err");
+    p.src=url;
+  };
+  im.src=url;
+}
+function showMap(el){
+  const st=$("#stage");st.innerHTML="";st.appendChild(el);state.img=el;
+  $("#copyimg").disabled=state.tainted;$("#dlimg").disabled=state.tainted;
+  $("#maphint").innerHTML=state.tainted
+    ? "この画像はブラウザ経由で直接コピーできません。画像を<b>右クリック →「画像をコピー」</b>で Excel に貼り付けてください。"
+    : (state.base==="gsi"
+       ? "チラシに使う場合は「出典：国土地理院ウェブサイト」の表記を残してください。この表記があれば印刷・配布ができます。"
+       : "Google の地図を印刷物に使う場合は、Google Maps Platform の利用規約をご確認ください。");
+}
+function drawMap(){ state.base==="gsi"?drawGsi():drawGoogle(); }
+
+/* ══════════ UI ══════════ */
+function initUI(){
+  const wrap=$("#cats");
+  CATS.forEach(c=>{
+    const b=document.createElement("button");
+    b.className="chip";b.textContent=c.label;b.setAttribute("aria-pressed",c.on);
+    b.onclick=()=>{c.on=!c.on;b.setAttribute("aria-pressed",c.on);};
+    wrap.appendChild(b);
+  });
+  $("#mapnv").textContent=$("#mapn").value+"件";
+  $("#mapn").oninput=e=>{$("#mapnv").textContent=e.target.value+"件";
+    state.rows.forEach((r,i)=>{if(!r.must)r.show=(i-2)<+e.target.value;});
+    if(state.rows.length){renderFac();autoZoom();drawMap();}};
+  $("#allowdup").onchange=()=>{if(state.cands.length){pickRows();renderFac();autoZoom();drawMap();}};
+  $("#run").onclick=run;
+  $("#addr").onkeydown=e=>{if(e.key==="Enter")run();};
+  $("#pick").onchange=()=>{syncSchoolLabels();
+    say("学区を変更しました。学校の位置と徒歩分数を取り直すには、もう一度「調査する」を押してください。");};
+
+  const k=localStorage.getItem("vivi_gmaps_key");if(k)$("#key").value=k;
+  $("#savekey").onclick=()=>{localStorage.setItem("vivi_gmaps_key",$("#key").value.trim());say("このブラウザにキーを保存しました。","ok");};
+  $("#clearkey").onclick=()=>{localStorage.removeItem("vivi_gmaps_key");$("#key").value="";say("キーを消去しました。");};
+
+  $("#seg-base").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+    state.base=b.dataset.base;
+    $("#seg-base").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));
+    $("#gsistd").parentElement.style.display=state.base==="gsi"?"":"none";
+    if(state.origin)drawMap();
+  });
+  $("#zin").onclick=()=>{state.zoom=Math.min(19,state.zoom+1);$("#zval").textContent=state.zoom;drawMap();};
+  $("#zout").onclick=()=>{state.zoom=Math.max(11,state.zoom-1);$("#zval").textContent=state.zoom;drawMap();};
+  $("#numlabel").onchange=drawMap;$("#gsistd").onchange=drawMap;$("#remap").onclick=drawMap;
+
+  $("#copyimg").onclick=async()=>{
+    if(!(state.img instanceof HTMLCanvasElement))return;
+    state.img.toBlob(async b=>{
+      try{await navigator.clipboard.write([new ClipboardItem({"image/png":b})]);say("画像をコピーしました。Excel で貼り付けてください。","ok");}
+      catch(e){say("コピーできませんでした。「PNGで保存」をお使いください。","err");}
+    });
+  };
+  $("#dlimg").onclick=()=>{
+    if(!(state.img instanceof HTMLCanvasElement))return;
+    const a=document.createElement("a");
+    a.download=`周辺地図_${state.addr.replace(/[\\/:*?"<>|]/g,"")}.png`;
+    a.href=state.img.toDataURL("image/png");a.click();
+  };
+  $("#copytxt").onclick=()=>copy(lines().join("\n"),"一覧をコピーしました。");
+  $("#copytsv").onclick=()=>copy(tsv(),"Excel用にコピーしました。セルに貼り付けてください。");
+
+  $("#credit").innerHTML="地図：国土地理院（地理院タイル）／ Google Maps Platform　｜　学区：富山市小中学校通学区域表（令和6年8月4日改正）　｜　徒歩分数＝道路距離÷80m（1分未満切り上げ）";
+  $("#quota").textContent="1件あたりの目安：Geocoding 1回・Places 約10回・距離計算 1回";
+}
+function lines(){
+  const L=state.rows.map(r=>`${r.name}　徒歩${r.mins}分`);
+  if(state.station)L.unshift(`${state.station.name}　徒歩${state.station.mins}分`);
+  if(state.bus)L.unshift(`${state.bus.name}　徒歩${state.bus.mins}分`);
+  return L;
+}
+function tsv(){
+  const rows=[];
+  if(state.station)rows.push(["最寄り駅",state.station.name,state.station.mins]);
+  if(state.bus)rows.push(["最寄りバス停",state.bus.name,state.bus.mins]);
+  state.rows.forEach(r=>rows.push([r.catLabel,r.name,r.mins]));
+  return rows.map(r=>r.join("\t")).join("\n");
+}
+function copy(t,ok){navigator.clipboard.writeText(t).then(()=>say(ok,"ok"),()=>say("コピーできませんでした。","err"));}
+initUI();
+</script>
+</body>
+</html>
