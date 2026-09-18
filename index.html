@@ -90,6 +90,8 @@ table.fac tr.must:hover td{background:#FDF0DC}
 .mins small{font-size:14px;color:var(--ink-m);font-weight:700}
 .dist{font-size:12.5px;color:var(--ink-m);text-align:right;white-space:nowrap}
 td.ctl{width:34px;text-align:center}
+.no{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--orange);color:#fff;font-weight:700;font-size:15px}
+.no.off{background:#C7D0DA}
 td.ctl input{width:19px;height:19px;accent-color:var(--orange)}
 select.swap{border:1px solid var(--line-s);padding:4px 6px;font-size:13px;border-radius:3px;max-width:100%;background:#FBFCFE}
 
@@ -110,6 +112,12 @@ select.swap{border:1px solid var(--line-s);padding:4px 6px;font-size:13px;border
 .zoomrow{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:700}
 .zoomrow input[type=range]{width:120px;accent-color:var(--orange)}
 
+#ovr-box{margin-top:14px;border-top:2px dashed var(--line);padding-top:13px}
+#ovr-list{margin-top:10px;display:flex;flex-wrap:wrap;gap:7px}
+.ovr{display:inline-flex;align-items:center;gap:8px;background:#FFF4E3;border:1.5px solid var(--gold);border-radius:4px;padding:5px 9px;font-size:14.5px}
+.ovr button{border:none;background:none;color:#A35A00;font-weight:700;cursor:pointer;font-size:16px;padding:0 2px;line-height:1}
+.ovr button:hover{color:var(--red)}
+#ovr-json{width:100%;border:1.5px solid var(--line);border-radius:4px;padding:8px}
 .status{font-size:14.5px;padding:10px 14px;border-radius:4px;margin-bottom:12px;display:none}
 .status.on{display:block}
 .status.info{background:#E6F0FA;border-left:5px solid var(--navy-l)}
@@ -194,6 +202,23 @@ details.adv summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--na
         <label class="fld">学区を手動で選ぶ</label>
         <select id="pick"></select>
       </div>
+      <div id="ovr-box" class="hide">
+        <label class="fld">この学区を町名に登録して、次回から自動で使う</label>
+        <div class="row2">
+          <input type="text" id="ovr-town" placeholder="天正寺">
+          <button class="btn sm" id="ovr-save" style="flex:0 0 120px">登録する</button>
+        </div>
+        <div class="hint">登録した町名で始まる住所は、通学区域表より優先してこの学校になります。「天正寺」のように町名だけ、「栄町一丁目」のように丁目まで、どちらでも登録できます。</div>
+        <div id="ovr-list"></div>
+        <details class="adv">
+          <summary>登録内容を他のPCと共有する</summary>
+          <textarea id="ovr-json" rows="3" style="margin-top:6px;font-size:13px"></textarea>
+          <div class="row2" style="margin-top:6px;max-width:420px">
+            <button class="btn sm ghost" id="ovr-copy">コピー</button>
+            <button class="btn sm ghost" id="ovr-load">貼り付けた内容を取り込む</button>
+          </div>
+        </details>
+      </div>
       <div class="hint" id="matchinfo"></div>
     </div>
   </div>
@@ -210,7 +235,7 @@ details.adv summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--na
     <h2>周辺施設（8項目）</h2>
     <div class="body">
       <table class="fac"><thead><tr>
-        <th title="地図に載せる">地図</th><th>区分</th><th>施設名</th><th style="text-align:right">徒歩</th><th>差し替え</th>
+        <th title="地図に載せる">地図</th><th>No</th><th>区分</th><th>施設名</th><th style="text-align:right">徒歩</th><th>差し替え</th>
       </tr></thead><tbody id="fac-body"></tbody></table>
       <div class="row2" style="margin-top:14px;max-width:420px">
         <button class="btn sm ghost" id="copytxt">一覧をコピー</button>
@@ -228,7 +253,7 @@ details.adv summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--na
           <button data-base="google" aria-pressed="false">Google</button>
         </div>
         <div class="zoomrow">縮尺 <button class="btn sm ghost" id="zout">－</button><span id="zval">16</span><button class="btn sm ghost" id="zin">＋</button></div>
-        <label style="font-weight:700"><input type="checkbox" id="numlabel"> 番号を入れる</label>
+        <label style="font-weight:700"><input type="checkbox" id="numlabel" checked> 番号を入れる</label>
         <label style="font-weight:700"><input type="checkbox" id="gsistd"> 建物名を濃く</label>
       </div>
       <div class="mapstage" id="stage"></div>
@@ -388,8 +413,34 @@ const TOWN=new Map(), TOWNBASE=new Map();
     for(const x of v)if(!TOWNBASE.get(b).some(y=>y.e===x.e&&y.m===x.m))TOWNBASE.get(b).push(x);
   }
 })();
+let OVR={};
+function loadOvr(){try{OVR=JSON.parse(localStorage.getItem("vivi_gakku_ovr")||"{}");}catch(e){OVR={};}}
+function saveOvr(){localStorage.setItem("vivi_gakku_ovr",JSON.stringify(OVR));renderOvr();}
+function renderOvr(){
+  const el=$("#ovr-list"),ks=Object.keys(OVR).sort();
+  el.innerHTML=ks.length?ks.map(k=>{
+    const[e,m]=OVR[k].split("|");
+    return `<span class="ovr"><b>${k}</b> → ${e}小／${m}中<button data-k="${k}" title="削除">✕</button></span>`;
+  }).join(""):'<span class="hint">登録はまだありません。</span>';
+  el.querySelectorAll("button").forEach(b=>b.onclick=()=>{delete OVR[b.dataset.k];saveOvr();});
+  $("#ovr-json").value=JSON.stringify(OVR);
+}
+function guessTown(addr,matched){
+  if(matched)return matched;
+  const a=normAddress(addr);
+  const m=a.match(/^(.*?[一二三四五六七八九十]丁目)/);
+  if(m)return m[1];
+  const m2=a.match(/^([^\d]+)/);
+  return m2?m2[1].replace(/[番号-].*$/,""):a;
+}
 function lookupGakku(addr){
   const a=normAddress(addr);
+  let ob=null;
+  for(const k of Object.keys(OVR)){
+    const n=normTown(k);
+    if(n&&a.startsWith(n)&&(!ob||n.length>ob.n.length))ob={k,n};
+  }
+  if(ob){const[e,m]=OVR[ob.k].split("|");return{matched:ob.k,hits:[{e,m,caution:null,src:ob.k}],mode:"override"};}
   let best=null;
   for(const k of TOWN.keys())if(a.startsWith(k)&&(!best||k.length>best.length))best=k;
   if(best)return{matched:best,hits:TOWN.get(best),mode:"exact"};
@@ -420,18 +471,31 @@ function say(t,kind){const e=$("#msg");e.className="status on "+(kind||"info");e
 function hideMsg(){$("#msg").className="status";}
 
 /* ══════════ Google API ══════════ */
-let gReady=null;
+let gReady=null, authFailed=false;
 function loadGoogle(key){
   if(gReady)return gReady;
+  window.gm_authFailure=()=>{
+    authFailed=true;
+    say("Google がこのAPIキーを拒否しました。原因は次のどれかです。<br>"+
+        "・請求先アカウント（お支払い情報）が未設定<br>"+
+        "・APIキーの「APIの制限」に Geocoding API / Places API (New) / Distance Matrix API が入っていない<br>"+
+        "・リファラーに https://s-yago.github.io/* が入っていない","err");
+    $("#run").disabled=false;$("#run").textContent="調査する";
+  };
   gReady=new Promise((res,rej)=>{
     window.__gcb=()=>res();
     const s=document.createElement("script");
     s.src="https://maps.googleapis.com/maps/api/js?key="+encodeURIComponent(key)+
-          "&libraries=places,geocoding,routes&language=ja&region=JP&loading=async&callback=__gcb";
-    s.onerror=()=>rej(new Error("Google Maps の読み込みに失敗しました。APIキーとリファラー制限を確認してください。"));
+          "&v=weekly&language=ja&region=JP&loading=async&callback=__gcb";
+    s.onerror=()=>rej(new Error("Google Maps の読み込みに失敗しました。ネットワークとAPIキーを確認してください。"));
     document.head.appendChild(s);
   });
   return gReady;
+}
+function withTimeout(p,ms,label){
+  return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>{
+    rej(new Error(label+"が"+Math.round(ms/1000)+"秒以内に終わりませんでした。F12キーでコンソールを開き、Googleからのエラー内容を確認してください。"));
+  },ms))]);
 }
 async function geocode(addr){
   const {Geocoder}=await google.maps.importLibrary("geocoding");
@@ -502,7 +566,7 @@ async function run(){
   $("#run").disabled=true;$("#run").innerHTML='<span class="spin"></span> 調査中…';
   try{
     say("Google Maps に接続しています…");
-    await loadGoogle(key);
+    await withTimeout(loadGoogle(key),20000,"Google Maps の読み込み");
 
     // 1. 学区
     const gk=lookupGakku(addr);
@@ -510,7 +574,7 @@ async function run(){
 
     // 2. ジオコーディング
     say("住所を地図上で特定しています…");
-    const o=await geocode(addr);
+    const o=await withTimeout(geocode(addr),25000,"住所の特定");
     state.origin=o;state.addr=addr;
     $("#matchinfo").textContent="判定に使った住所："+o.formatted;
 
@@ -523,10 +587,10 @@ async function run(){
     say("学校と周辺施設を検索しています…");
     const shoName=pair.e?"富山市立"+pair.e+"小学校":"（学区未選択）";
     const chuName=pair.m?"富山市立"+pair.m+"中学校":"（学区未選択）";
-    const [shoP,chuP]=await Promise.all([
+    const [shoP,chuP]=await withTimeout(Promise.all([
       pair.e?findPlace(shoName,o):Promise.resolve(null),
       pair.m?findPlace(chuName,o):Promise.resolve(null)
-    ]);
+    ]),30000,"学校の検索");
 
     // 4. 周辺施設
     const jobs=CATS.filter(c=>c.on).map(async c=>{
@@ -535,7 +599,7 @@ async function run(){
     });
     const staJob=nearby(o,["train_station","light_rail_station","subway_station"],4000,3);
     const busJob=nearby(o,["bus_stop","bus_station"],1500,4);
-    const [catRes,stas,buses]=await Promise.all([Promise.all(jobs),staJob,busJob]);
+    const [catRes,stas,buses]=await withTimeout(Promise.all([Promise.all(jobs),staJob,busJob]),40000,"周辺施設の検索");
 
     // 5. 道路距離をまとめて計算
     say("道路距離を計算しています…");
@@ -602,6 +666,14 @@ function renderSchoolBox(gk,addr){
       <div class="note">「${normAddress(addr)}」で照合しました。下の一覧から手動で選んでください。</div></div>`;
     $("#school-pick").classList.remove("hide");
   }
+  $("#ovr-box").classList.remove("hide");
+  $("#ovr-town").value=guessTown(addr,gk.matched||null);
+  if(gk.mode==="override"){
+    warnBox.innerHTML=`<div class="warn" style="border-left-color:#1B6B2F;background:#EDF7EE">
+      <b>手動で登録した学区を使いました（${gk.matched}）。</b>
+      <div class="note">通学区域表より優先されます。解除するには下の一覧の✕を押してください。</div></div>`;
+  }
+  renderOvr();
   syncSchoolLabels();
 }
 function syncSchoolLabels(){
@@ -637,6 +709,7 @@ function renderFac(){
         `<option value="${c.name}"${c.name===r.name?" selected":""}>${c.name}（${c.mins}分）</option>`).join("")+`</optgroup>`).join("");
     tr.innerHTML=`
       <td class="ctl"><input type="checkbox" data-i="${i}" class="showchk" ${r.show?"checked":""}></td>
+      <td><span class="no${r.show?"":" off"}">${i+1}</span></td>
       <td><span class="tag ${r.must?"must":""}">${r.catLabel}</span></td>
       <td><span class="fname">${r.name||"－"}</span>${r.est?' <span class="tag">直線推定</span>':""}${r.missing?' <span class="tag">位置不明</span>':""}</td>
       <td><div class="mins">${r.mins||"－"}<small>分</small></div><div class="dist">${r.m?r.m+"m":""}</div></td>
@@ -650,6 +723,35 @@ function renderFac(){
   tb.querySelectorAll(".showchk").forEach(s=>s.onchange=e=>{
     state.rows[+e.target.dataset.i].show=e.target.checked;drawMap();
   });
+}
+async function refreshSchools(){
+  syncSchoolLabels();
+  const p=currentPair();
+  if(!state.origin||!state.rows.length)return;
+  const o=state.origin;
+  const names={sho:p.e?"富山市立"+p.e+"小学校":null, chu:p.m?"富山市立"+p.m+"中学校":null};
+  say("学校を検索し直しています…");
+  try{
+    const found={};
+    await Promise.all(["sho","chu"].map(async k=>{
+      found[k]=names[k]?await findPlace(names[k],o):null;
+    }));
+    const keys=["sho","chu"].filter(k=>found[k]);
+    const ds=keys.length?await walkDistances(o,keys.map(k=>found[k])):[];
+    ["sho","chu"].forEach(k=>{
+      const label=k==="sho"?"小学校":"中学校";
+      if(found[k]){
+        const i=keys.indexOf(k);
+        state[k]={...found[k],catLabel:label,m:ds[i].m,est:ds[i].est,mins:WALK(ds[i].m)};
+      }else{
+        state[k]={name:names[k]||"（未選択）",catLabel:label,m:0,mins:0,missing:!!names[k]};
+      }
+    });
+    state.rows[0]={...state.sho,must:true,show:state.rows[0].show};
+    state.rows[1]={...state.chu,must:true,show:state.rows[1].show};
+    renderFac();autoZoom();drawMap();
+    say("学区を変更しました。徒歩分数と地図も更新しました。","ok");
+  }catch(e){say(e.message||String(e),"err");}
 }
 function renderTrans(){
   $("#v-sta").textContent=state.station?state.station.name:"見つかりませんでした";
@@ -698,11 +800,11 @@ function drawPins(ctx,center,z){
   for(const p of mapPoints()){
     const q=project(p.lat,p.lng,z), x=q.x-L, y=q.y-T;
     if(x<-20||x>OUT_W+20||y<-20||y>OUT_H+20)continue;
-    const isProp=p.kind==="prop", r=isProp?9:7;
-    ctx.beginPath();ctx.arc(x,y,r+2.5,0,7);ctx.fillStyle="#fff";ctx.fill();
+    const isProp=p.kind==="prop", r=isProp?11:(num?10:7);
+    ctx.beginPath();ctx.arc(x,y,r+3,0,7);ctx.fillStyle="#fff";ctx.fill();
     ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fillStyle=isProp?"#C62828":"#E8730C";ctx.fill();
-    if(isProp){ctx.beginPath();ctx.arc(x,y,3,0,7);ctx.fillStyle="#fff";ctx.fill();}
-    else if(num){ctx.fillStyle="#fff";ctx.font="bold 11px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(String(p.n),x,y+.5);}
+    if(isProp){ctx.beginPath();ctx.arc(x,y,4,0,7);ctx.fillStyle="#fff";ctx.fill();}
+    else if(num){ctx.fillStyle="#fff";ctx.font="bold 14px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(String(p.n),x,y+.5);}
   }
 }
 const tileProbe={};
@@ -777,11 +879,12 @@ function drawGoogle(){
 function showMap(el){
   const st=$("#stage");st.innerHTML="";st.appendChild(el);state.img=el;
   $("#copyimg").disabled=state.tainted;$("#dlimg").disabled=state.tainted;
-  $("#maphint").innerHTML=state.tainted
+  $("#maphint").innerHTML=(state.tainted
     ? "この画像はブラウザ経由で直接コピーできません。画像を<b>右クリック →「画像をコピー」</b>で Excel に貼り付けてください。"
     : (state.base==="gsi"
        ? "チラシに使う場合は「出典：国土地理院ウェブサイト」の表記を残してください。この表記があれば印刷・配布ができます。"
-       : "Google の地図を印刷物に使う場合は、Google Maps Platform の利用規約をご確認ください。");
+       : "Google の地図を印刷物に使う場合は、Google Maps Platform の利用規約をご確認ください。"))
+    +'<br><b style="color:#C62828">●</b> 物件　<b style="color:#E8730C">●</b> 一覧の番号と対応';
 }
 function drawMap(){ state.base==="gsi"?drawGsi():drawGoogle(); }
 
@@ -801,8 +904,27 @@ function initUI(){
   $("#allowdup").onchange=()=>{if(state.cands.length){pickRows();renderFac();autoZoom();drawMap();}};
   $("#run").onclick=run;
   $("#addr").onkeydown=e=>{if(e.key==="Enter")run();};
-  $("#pick").onchange=()=>{syncSchoolLabels();
-    say("学区を変更しました。学校の位置と徒歩分数を取り直すには、もう一度「調査する」を押してください。");};
+  $("#pick").onchange=()=>refreshSchools();
+
+  loadOvr();renderOvr();
+  $("#ovr-save").onclick=()=>{
+    const t=$("#ovr-town").value.trim(), v=$("#pick").value;
+    if(!t){say("登録する町名を入れてください。","err");return;}
+    if(!v){say("先に学校を選んでください。","err");return;}
+    OVR[t]=v;saveOvr();
+    const[e,m]=v.split("|");
+    say(`「${t}」を ${e}小学校／${m}中学校 として登録しました。次回からこの学区になります。`,"ok");
+  };
+  $("#ovr-copy").onclick=()=>copy($("#ovr-json").value,"登録内容をコピーしました。他のPCの同じ欄に貼り付けてください。");
+  $("#ovr-load").onclick=()=>{
+    try{
+      const o=JSON.parse($("#ovr-json").value.trim()||"{}");
+      if(typeof o!=="object"||Array.isArray(o))throw new Error();
+      let n=0;
+      for(const[k,v]of Object.entries(o))if(typeof v==="string"&&v.includes("|")){OVR[k]=v;n++;}
+      saveOvr();say(n+"件を取り込みました。","ok");
+    }catch(e){say("取り込めませんでした。コピーした内容をそのまま貼り付けてください。","err");}
+  };
 
   const k=localStorage.getItem("vivi_gmaps_key");if(k)$("#key").value=k;
   $("#savekey").onclick=()=>{localStorage.setItem("vivi_gmaps_key",$("#key").value.trim());say("このブラウザにキーを保存しました。","ok");};
