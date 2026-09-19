@@ -118,6 +118,19 @@ select.swap{border:1px solid var(--line-s);padding:4px 6px;font-size:13px;border
 .ovr button{border:none;background:none;color:#A35A00;font-weight:700;cursor:pointer;font-size:16px;padding:0 2px;line-height:1}
 .ovr button:hover{color:var(--red)}
 #ovr-json{width:100%;border:1.5px solid var(--line);border-radius:4px;padding:8px}
+.ovw{display:grid;grid-template-columns:1fr 1.4fr 1fr 1fr;gap:12px}
+@media(max-width:760px){.ovw{grid-template-columns:1fr 1fr}}
+.ov{border:2px solid var(--navy);border-radius:5px;padding:10px 12px;background:#F7FAFD}
+.ov .k{font-size:13px;color:var(--ink-m);font-weight:700}
+.ov .v{font-size:21px;font-weight:700;color:var(--navy);line-height:1.25}
+.ov.num{background:#FFF6EA;border-color:var(--orange)}
+.ov.num .v{font-size:34px;color:var(--orange)}
+.ov .sub{font-size:12.5px;color:var(--ink-m);font-weight:700}
+table.anb{width:100%;border-collapse:collapse;margin-top:10px}
+table.anb th{background:#E3EAF2;color:var(--navy);font-size:13.5px;padding:7px 9px;text-align:left}
+table.anb td{border-bottom:1px solid var(--line-s);padding:7px 9px;font-size:15px}
+table.anb input{width:110px;padding:6px 8px;border:1.5px solid var(--line);border-radius:4px;text-align:right;font-size:16px;font-weight:700}
+.tbox input{width:100%;margin:4px 0 2px;padding:6px 8px;border:1.5px solid var(--line-s);border-radius:4px;font-size:14px}
 .status{font-size:14.5px;padding:10px 14px;border-radius:4px;margin-bottom:12px;display:none}
 .status.on{display:block}
 .status.info{background:#E6F0FA;border-left:5px solid var(--navy-l)}
@@ -223,12 +236,45 @@ details.adv summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--na
     </div>
   </div>
 
+  <div class="card hide" id="c-toshi">
+    <h2>都市計画・用途地域</h2>
+    <div class="body">
+      <div class="ovw">
+        <div class="ov"><div class="k">都市計画</div><div class="v" id="v-kuiki">－</div></div>
+        <div class="ov"><div class="k">用途地域</div><div class="v" id="v-youto">－</div></div>
+        <div class="ov num"><div class="k">建ぺい率</div><div class="v" id="v-kenpei">－</div><div class="sub" id="s-kenpei"></div></div>
+        <div class="ov num"><div class="k">容積率</div><div class="v" id="v-yoseki">－</div><div class="sub" id="s-yoseki"></div></div>
+      </div>
+      <div id="toshi-warn"></div>
+      <div id="anbun" class="hide">
+        <div class="hint" style="margin-top:12px"><b>敷地が何㎡ずつかかっているかを入れると、按分後の数値を計算します。</b>
+        公図や測量図で確認してください。片方が0なら単独扱いになります。</div>
+        <table class="anb"><thead><tr><th>用途地域</th><th>指定建ぺい／容積</th><th>物件からの距離</th><th>敷地面積(㎡)</th></tr></thead>
+        <tbody id="anb-body"></tbody></table>
+      </div>
+      <button class="btn sm ghost" id="copytoshi" style="margin-top:14px">概要をコピー</button>
+      <div class="hint" id="toshi-src"></div>
+    </div>
+  </div>
+
   <div class="card hide" id="c-trans">
     <h2>最寄り交通</h2>
     <div class="body"><div class="trans">
-      <div class="tbox"><div class="k">最寄り駅</div><div class="v" id="v-sta">－</div><div class="m" id="m-sta"></div></div>
-      <div class="tbox"><div class="k">最寄りバス停</div><div class="v" id="v-bus">－</div><div class="m" id="m-bus"></div></div>
-    </div></div>
+      <div class="tbox"><div class="k">最寄り駅</div>
+        <input type="text" id="op-sta" list="dl-sta" placeholder="事業者・路線名を入れると記憶します">
+        <div class="v" id="v-sta">－</div><div class="m" id="m-sta"></div></div>
+      <div class="tbox"><div class="k">最寄りバス停</div>
+        <input type="text" id="op-bus" list="dl-bus" placeholder="事業者・路線名を入れると記憶します">
+        <div class="v" id="v-bus">－</div><div class="m" id="m-bus"></div></div>
+    </div>
+    <datalist id="dl-sta">
+      <option value="富山地鉄本線"><option value="富山地鉄不二越・上滝線"><option value="富山地鉄市内電車">
+      <option value="あいの風とやま鉄道"><option value="JR高山本線">
+    </datalist>
+    <datalist id="dl-bus">
+      <option value="富山地鉄バス"><option value="まいどはやバス"><option value="コミュニティバス">
+    </datalist>
+    </div>
   </div>
 
   <div class="card hide" id="c-fac">
@@ -256,6 +302,7 @@ details.adv summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--na
         <button class="btn sm ghost" id="zreset">位置を戻す</button>
         <label style="font-weight:700"><input type="checkbox" id="numlabel" checked> 番号を入れる</label>
         <label style="font-weight:700"><input type="checkbox" id="gsistd"> 建物名を濃く</label>
+        <label style="font-weight:700"><input type="checkbox" id="zoneline"> 用途地域の境界（確認用）</label>
       </div>
       <div class="mapstage" id="stage"></div>
       <div class="row2" style="margin-top:14px;max-width:560px">
@@ -454,22 +501,136 @@ const ALLPAIRS=(()=>{const s=new Set();for(const[e,m]of GAKKU_RAW)s.add(e+"|"+m)
 
 /* ══════════ 設定 ══════════ */
 const CATS=[
- {id:"youji",  label:"幼稚園・保育園", types:["preschool"],                     r:1500, on:true},
+ {id:"youji",  label:"幼稚園・保育園", types:["preschool","child_care_agency","school"], text:["保育園","幼稚園"], r:1500, on:true},
  {id:"conv",   label:"コンビニ",       types:["convenience_store"],             r:1500, on:true},
- {id:"super",  label:"スーパー",       types:["supermarket"],                   r:2500, on:true},
- {id:"drug",   label:"ドラッグストア", types:["drugstore","pharmacy"],          r:2500, on:true},
+ {id:"super",  label:"スーパー",       types:["supermarket","grocery_store"],   text:["スーパー"], r:2500, on:true},
+ {id:"drug",   label:"ドラッグストア", types:["drugstore","pharmacy"],          text:["ドラッグストア"], r:2500, on:true},
  {id:"sc",     label:"SC",             types:["shopping_mall"],                 r:4000, on:true},
  {id:"post",   label:"郵便局",         types:["post_office"],                   r:2500, on:true},
  {id:"bank",   label:"銀行",           types:["bank"],                          r:2500, on:true},
- {id:"hosp",   label:"病院・クリニック",types:["hospital"],                     r:3000, on:true},
+ {id:"hosp",   label:"病院・クリニック",types:["hospital","doctor"],            text:["病院"], r:3000, on:true},
  {id:"park",   label:"公園",           types:["park"],                          r:1200, on:false},
 ];
+const YOUJI_OK=/保育|幼稚|こども園|子ども園|認定こども/;
 const WALK=m=>Math.max(1,Math.ceil(m/80));
 const $=s=>document.querySelector(s);
 const state={origin:null,addr:"",sho:null,chu:null,cands:[],rows:[],station:null,bus:null,zoom:16,base:"gsi",img:null,tainted:false,pan:{x:0,y:0}};
 
 function say(t,kind){const e=$("#msg");e.className="status on "+(kind||"info");e.innerHTML=t;}
 function hideMsg(){$("#msg").className="status";}
+
+/* ══════════ 用途地域・都市計画 ══════════ */
+let TOSHI=null;
+const NEAR_M=50;   // これ以内に別の用途地域があれば「またがり注意」とする
+function ptInRing(x,y,r){
+  let inside=false;
+  for(let i=0,j=r.length-2;i<r.length;j=i,i+=2){
+    const xi=r[i],yi=r[i+1],xj=r[j],yj=r[j+1];
+    if(((yi>y)!==(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))inside=!inside;
+  }
+  return inside;
+}
+function ptInPolys(x,y,ps){
+  for(const poly of ps){
+    if(!ptInRing(x,y,poly[0]))continue;
+    let hole=false;
+    for(let h=1;h<poly.length;h++)if(ptInRing(x,y,poly[h])){hole=true;break;}
+    if(!hole)return true;
+  }
+  return false;
+}
+function segDist(px,py,ax,ay,bx,by,kx){
+  const AX=(ax-px)*kx,AY=ay-py,BX=(bx-px)*kx,BY=by-py;
+  const dx=BX-AX,dy=BY-AY,L=dx*dx+dy*dy;
+  let t=L?(-AX*dx-AY*dy)/L:0;
+  t=t<0?0:t>1?1:t;
+  return Math.hypot(AX+t*dx,AY+t*dy);
+}
+function distToBoundary(x,y,ps){
+  const kx=Math.cos(y*Math.PI/180);
+  let m=Infinity;
+  for(const poly of ps)for(const r of poly)
+    for(let i=0;i+3<r.length;i+=2){
+      const d=segDist(x,y,r[i],r[i+1],r[i+2],r[i+3],kx);
+      if(d<m)m=d;
+    }
+  return m*111320;
+}
+function bboxHit(lng,lat,r,pad){return !(lng<r[0]-pad||lng>r[2]+pad||lat<r[1]-pad||lat>r[3]+pad);}
+function lookupToshi(lat,lng){
+  const pad=(NEAR_M+10)/111320/Math.cos(lat*Math.PI/180);
+  const zones=[],near=[];
+  for(const z of TOSHI.youto){
+    if(!bboxHit(lng,lat,z.r,pad))continue;
+    if(ptInPolys(lng,lat,z.p))zones.push({...z,d:0});
+    else{const d=distToBoundary(lng,lat,z.p);if(d<=NEAR_M)near.push({...z,d});}
+  }
+  let layer=null;
+  for(const t of TOSHI.tosi){
+    if(!bboxHit(lng,lat,t.r,0))continue;
+    if(ptInPolys(lng,lat,t.p)&&(layer===null||t.l<layer))layer=t.l;
+  }
+  near.sort((a,b)=>a.d-b.d);
+  return{zones,near,layer,layerName:layer?TOSHI.meta.layers[layer]:"都市計画区域外"};
+}
+function renderToshi(lat,lng){
+  if(!TOSHI)return;
+  $("#c-toshi").classList.remove("hide");
+  const r=lookupToshi(lat,lng);
+  state.toshi=r;
+  $("#v-kuiki").textContent=r.layerName;
+  $("#toshi-src").textContent="出典："+TOSHI.meta.youto_src+"／"+TOSHI.meta.tosi_src;
+  const cand=[...r.zones,...r.near];
+  const warn=$("#toshi-warn");warn.innerHTML="";
+  if(!cand.length){
+    $("#v-youto").textContent="指定なし";
+    $("#v-kenpei").textContent="－";$("#v-yoseki").textContent="－";
+    $("#s-kenpei").textContent="";$("#s-yoseki").textContent="";
+    $("#anbun").classList.add("hide");
+    warn.innerHTML='<div class="warn" style="border-left-color:#B8860B;background:#FDF8E8"><b>用途地域の指定がありません。</b><div class="note">市街化調整区域や都市計画区域外ではこれが通常です。建築可否は役所で確認してください。</div></div>';
+    return;
+  }
+  if(cand.length>1){
+    warn.innerHTML=`<div class="warn"><b>⚠ ${NEAR_M}m以内に用途地域の境界があります。敷地がまたがっていないか確認してください。</b>
+      <div class="note">またがっている場合は、下の欄に各用途地域にかかる敷地面積を入れてください。</div></div>`;
+    $("#anbun").classList.remove("hide");
+  }else{
+    $("#anbun").classList.add("hide");
+  }
+  const tb=$("#anb-body");tb.innerHTML="";
+  cand.forEach((z,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td><b>${z.n}</b></td><td>${z.b}％ ／ ${z.v}％</td>
+      <td>${z.d===0?"<b>この地点</b>":"境界まで "+Math.round(z.d)+"m"}</td>
+      <td><input type="number" min="0" step="0.01" data-i="${i}" class="anbin" value="${z.d===0&&cand.length===1?"":""}"></td>`;
+    tb.appendChild(tr);
+  });
+  tb.querySelectorAll(".anbin").forEach(el=>el.oninput=()=>calcToshi(cand));
+  calcToshi(cand);
+}
+function calcToshi(cand){
+  const areas=[...document.querySelectorAll(".anbin")].map(el=>parseFloat(el.value)||0);
+  const total=areas.reduce((a,b)=>a+b,0);
+  if(total<=0){
+    const p=cand[0];
+    $("#v-youto").textContent=p.n;
+    $("#v-kenpei").textContent=p.b+"％";$("#v-yoseki").textContent=p.v+"％";
+    $("#s-kenpei").textContent="";$("#s-yoseki").textContent="";
+    state.toshiOut={youto:p.n,b:p.b+"％",v:p.v+"％"};
+    return;
+  }
+  const b=cand.reduce((s,z,i)=>s+z.b*areas[i],0)/total;
+  const v=cand.reduce((s,z,i)=>s+z.v*areas[i],0)/total;
+  const used=cand.filter((_,i)=>areas[i]>0);
+  const major=cand[areas.indexOf(Math.max(...areas))];
+  const name=used.map(z=>z.n).join("・");
+  $("#v-youto").textContent=name;
+  const r1=Math.round(b*10)/10, r2=Math.round(v*10)/10;
+  $("#v-kenpei").textContent=r1+"％";$("#v-yoseki").textContent=r2+"％";
+  $("#s-kenpei").textContent=used.length>1?"按分値（合計"+total+"㎡）":"";
+  $("#s-yoseki").textContent=used.length>1?"用途制限は "+major.n+" が適用":"";
+  state.toshiOut={youto:name,b:r1+"％",v:r2+"％",major:major.n};
+}
 
 /* ══════════ Google API ══════════ */
 let gReady=null, authFailed=false;
@@ -512,11 +673,22 @@ async function nearby(center,types,radius,n){
     const{places}=await Place.searchNearby({
       fields:["displayName","location"],
       locationRestriction:{center:new google.maps.LatLng(center.lat,center.lng),radius:radius},
-      includedPrimaryTypes:types, maxResultCount:n||5,
+      includedTypes:types, maxResultCount:n||5,
       rankPreference:SearchNearbyRankPreference.DISTANCE, language:"ja", region:"jp"
     });
     return places.map(p=>({name:p.displayName,lat:p.location.lat(),lng:p.location.lng()}));
   }catch(e){console.warn("nearby失敗",types,e);return[];}
+}
+async function textNear(q,center,radius,n){
+  const {Place,SearchByTextRankPreference}=await google.maps.importLibrary("places");
+  try{
+    const{places}=await Place.searchByText({
+      textQuery:q, fields:["displayName","location"], maxResultCount:n||5,
+      locationBias:{center:new google.maps.LatLng(center.lat,center.lng),radius:radius},
+      rankPreference:SearchByTextRankPreference.DISTANCE, language:"ja", region:"jp"
+    });
+    return places.map(p=>({name:p.displayName,lat:p.location.lat(),lng:p.location.lng()}));
+  }catch(e){console.warn("textNear失敗",q,e);return[];}
 }
 async function findPlace(q,center){
   const {Place}=await google.maps.importLibrary("places");
@@ -578,6 +750,7 @@ async function run(){
     const o=await withTimeout(geocode(addr),25000,"住所の特定");
     state.origin=o;state.addr=addr;
     $("#matchinfo").textContent="判定に使った住所："+o.formatted;
+    renderToshi(o.lat,o.lng);
 
     if(!gk.hits.length){
       say("この住所は通学区域表に見つかりませんでした。学区を手動で選んでください。","err");
@@ -595,8 +768,18 @@ async function run(){
 
     // 4. 周辺施設
     const jobs=CATS.filter(c=>c.on).map(async c=>{
-      const ps=await nearby(o,c.types,c.r,5);
-      return ps.map(p=>({...p,cat:c.id,catLabel:c.label}));
+      const res=await Promise.all([
+        nearby(o,c.types,c.r,5),
+        ...(c.text||[]).map(t=>textNear(t,o,c.r,5))
+      ]);
+      const seen=new Set(),out=[];
+      for(const p of res.flat()){
+        if(c.id==="youji"&&!YOUJI_OK.test(p.name))continue;   // 小中学校などを除く
+        const key=p.name+"|"+p.lat.toFixed(5);
+        if(seen.has(key))continue;
+        seen.add(key);out.push({...p,cat:c.id,catLabel:c.label});
+      }
+      return out.sort((a,b)=>haversine(o,a)-haversine(o,b)).slice(0,4);
     });
     const staJob=nearby(o,["train_station","light_rail_station","subway_station"],4000,3);
     const busJob=nearby(o,["bus_stop","bus_station"],1500,4);
@@ -754,11 +937,24 @@ async function refreshSchools(){
     say("学区を変更しました。徒歩分数と地図も更新しました。","ok");
   }catch(e){say(e.message||String(e),"err");}
 }
+let OPR={};
+function loadOpr(){try{OPR=JSON.parse(localStorage.getItem("vivi_transit_op")||"{}");}catch(e){OPR={};}}
+function saveOpr(){localStorage.setItem("vivi_transit_op",JSON.stringify(OPR));}
+function transLabel(p){
+  if(!p)return null;
+  const op=(OPR[p.name]||"").trim();
+  return (op?op+"「"+p.name+"」":p.name)+"　徒歩"+p.mins+"分";
+}
 function renderTrans(){
-  $("#v-sta").textContent=state.station?state.station.name:"見つかりませんでした";
-  $("#m-sta").textContent=state.station?`徒歩${state.station.mins}分（${state.station.m}m）`:"";
-  $("#v-bus").textContent=state.bus?state.bus.name:"見つかりませんでした";
-  $("#m-bus").textContent=state.bus?`徒歩${state.bus.mins}分（${state.bus.m}m）`:"";
+  const set=(p,vId,mId,opId)=>{
+    $(vId).textContent=p?p.name:"見つかりませんでした";
+    $(mId).textContent=p?`徒歩${p.mins}分（${p.m}m）`:"";
+    const el=$(opId);
+    el.value=p?(OPR[p.name]||""):"";
+    el.oninput=()=>{if(p){OPR[p.name]=el.value.trim();saveOpr();}};
+  };
+  set(state.station,"#v-sta","#m-sta","#op-sta");
+  set(state.bus,"#v-bus","#m-bus","#op-bus");
 }
 
 /* ══════════ 地図 ══════════ */
@@ -817,6 +1013,24 @@ function enableDrag(el){
   };
   el.onpointerup=end;el.onpointercancel=end;
 }
+function drawZones(ctx,center,z){
+  if(!TOSHI||!$("#zoneline").checked)return;
+  const c=project(center.lat,center.lng,z),L=c.x-OUT_W/2,T=c.y-OUT_H/2;
+  const nw=unproject(L,T,z), se=unproject(L+OUT_W,T+OUT_H,z);
+  ctx.save();ctx.strokeStyle="rgba(20,90,200,.9)";ctx.lineWidth=3;ctx.setLineDash([10,6]);
+  for(const zn of TOSHI.youto){
+    if(zn.r[2]<nw.lng||zn.r[0]>se.lng||zn.r[3]<se.lat||zn.r[1]>nw.lat)continue;
+    for(const poly of zn.p)for(const r of poly){
+      ctx.beginPath();
+      for(let i=0;i<r.length;i+=2){
+        const q=project(r[i+1],r[i],z);
+        i?ctx.lineTo(q.x-L,q.y-T):ctx.moveTo(q.x-L,q.y-T);
+      }
+      ctx.closePath();ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
 function drawPins(ctx,center,z){
   const c=project(center.lat,center.lng,z), L=c.x-OUT_W/2, T=c.y-OUT_H/2;
   const num=$("#numlabel").checked;
@@ -868,6 +1082,7 @@ async function drawGsi(){
     }
   }
   await Promise.all(jobs);
+  drawZones(ctx,center,z);
   drawPins(ctx,center,z);
   // 出典表記（地理院タイル利用の必須事項）
   ctx.font="bold 15px sans-serif";ctx.textAlign="right";ctx.textBaseline="bottom";
@@ -937,6 +1152,21 @@ function initUI(){
   $("#addr").onkeydown=e=>{if(e.key==="Enter")run();};
   $("#pick").onchange=()=>refreshSchools();
 
+  loadOpr();
+  $("#zoneline").onchange=()=>{if(state.origin)drawMap();};
+  $("#copytoshi").onclick=()=>{
+    if(!state.toshiOut){say("先に調査を実行してください。","err");return;}
+    copy([`都市計画\t${state.toshi.layerName}`,`用途地域\t${state.toshiOut.youto}`,
+          `建ぺい率\t${state.toshiOut.b}`,`容積率\t${state.toshiOut.v}`].join("\n"),
+         "概要をコピーしました。Excelのセルに貼り付けてください。");
+  };
+  fetch("toyama-toshi.json").then(r=>r.ok?r.json():Promise.reject(new Error()))
+    .then(d=>{TOSHI=d;})
+    .catch(()=>{
+      TOSHI=null;
+      $("#quota").innerHTML='<b style="color:#C62828">toyama-toshi.json が読めません。</b>index.html と同じ場所に置いてください。用途地域の判定だけが使えない状態です。';
+    });
+
   loadOvr();renderOvr();
   $("#ovr-save").onclick=()=>{
     const t=$("#ovr-town").value.trim(), v=$("#pick").value;
@@ -992,15 +1222,23 @@ function initUI(){
   $("#quota").textContent="1件あたりの目安：Geocoding 1回・Places 約10回・距離計算 1回";
 }
 function lines(){
-  const L=state.rows.map(r=>`${r.name}　徒歩${r.mins}分`);
-  if(state.station)L.unshift(`${state.station.name}　徒歩${state.station.mins}分`);
-  if(state.bus)L.unshift(`${state.bus.name}　徒歩${state.bus.mins}分`);
+  const L=[];
+  if(state.station)L.push(transLabel(state.station));
+  if(state.bus)L.push(transLabel(state.bus));
+  state.rows.forEach(r=>L.push(`${r.name}　徒歩${r.mins}分`));
   return L;
 }
 function tsv(){
   const rows=[];
-  if(state.station)rows.push(["最寄り駅",state.station.name,state.station.mins]);
-  if(state.bus)rows.push(["最寄りバス停",state.bus.name,state.bus.mins]);
+  if(state.toshiOut){
+    rows.push(["都市計画",state.toshi.layerName,""]);
+    rows.push(["用途地域",state.toshiOut.youto,""]);
+    rows.push(["建ぺい率",state.toshiOut.b,""]);
+    rows.push(["容積率",state.toshiOut.v,""]);
+  }
+  const nm=p=>{const o=(OPR[p.name]||"").trim();return o?o+"「"+p.name+"」":p.name;};
+  if(state.station)rows.push(["最寄り駅",nm(state.station),state.station.mins]);
+  if(state.bus)rows.push(["最寄りバス停",nm(state.bus),state.bus.mins]);
   state.rows.forEach(r=>rows.push([r.catLabel,r.name,r.mins]));
   return rows.map(r=>r.join("\t")).join("\n");
 }
