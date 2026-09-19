@@ -493,15 +493,19 @@ function syncSchoolLabels(){
 function pickRows(){
   const dup=$("#allowdup").checked;
   const used=new Set(),sel=[];
+  const youji=state.cands.find(c=>c.cat==="youji");   // No.3 は最寄りの幼稚園・保育園
+  if(youji){sel.push(youji);used.add("youji");}
   for(const c of state.cands){
     if(sel.length>=6)break;
+    if(sel.indexOf(c)>=0)continue;
     if(!dup&&used.has(c.cat))continue;
     used.add(c.cat);sel.push(c);
   }
+  const shown=parseInt($("#mapn").value,10);
   state.rows=[
     {...state.sho,catLabel:"小学校",must:true,show:true},
     {...state.chu,catLabel:"中学校",must:true,show:true},
-    ...sel.map((c,i)=>({...c,must:false,show:i<parseInt($("#mapn").value,10)}))
+    ...sel.map((c,i)=>({...c,must:false,show:i<shown}))
   ];
 }
 function moveRow(i,d){
