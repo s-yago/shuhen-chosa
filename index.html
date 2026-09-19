@@ -251,14 +251,21 @@ details.adv summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--na
         <div class="ov num"><div class="k">容積率</div><div class="v" id="v-yoseki">－</div><div class="sub" id="s-yoseki"></div></div>
       </div>
       <div id="toshi-warn"></div>
+      <div class="hint" id="toshi-breakdown"></div>
       <div id="anbun" class="hide">
         <div class="hint" style="margin-top:12px"><b>敷地が何㎡ずつかかっているかを入れると、按分後の数値を計算します。</b>
         公図や測量図で確認してください。片方が0なら単独扱いになります。</div>
         <table class="anb"><thead><tr><th>用途地域</th><th>指定建ぺい／容積</th><th>物件からの距離</th><th>敷地面積(㎡)</th></tr></thead>
         <tbody id="anb-body"></tbody></table>
       </div>
-      <button class="btn sm ghost" id="copytoshi" style="margin-top:14px">概要をコピー</button>
+      <div class="row2" style="margin-top:14px;max-width:520px">
+        <button class="btn sm ghost" id="copytoshi">概要をコピー</button>
+        <button class="btn sm" id="infomap">インフォマップで確認</button>
+      </div>
       <div class="hint" id="toshi-src"></div>
+      <div class="hint">「インフォマップで確認」を押すと、この物件の住所で都市計画情報の地図が直接開きます。
+      住所もクリップボードにコピーされるので、検索し直したいときはそのまま貼り付けられます。
+      URLを変えたいときはボタンを <b>Shift＋クリック</b>。</div>
     </div>
   </div>
 
@@ -343,7 +350,8 @@ function renderToshi(lat,lng){
   const r=lookupToshi(lat,lng);
   state.toshi=r;
   $("#v-kuiki").textContent=r.layerName;
-  $("#toshi-src").textContent="出典："+TOSHI.meta.youto_src+"／"+TOSHI.meta.tosi_src;
+  $("#toshi-src").innerHTML="この物件の座標： <b>"+lat.toFixed(8)+","+lng.toFixed(8)+
+    "</b>　（インフォマップ右下の表示と見比べてください）<br>出典："+TOSHI.meta.youto_src+"／"+TOSHI.meta.tosi_src;
   const cand=[...r.zones,...r.near];
   const warn=$("#toshi-warn");warn.innerHTML="";
   if(!cand.length){
@@ -356,7 +364,8 @@ function renderToshi(lat,lng){
   }
   if(cand.length>1){
     warn.innerHTML=`<div class="warn"><b>⚠ ${NEAR_M}m以内に用途地域の境界があります。敷地がまたがっていないか確認してください。</b>
-      <div class="note">またがっている場合は、下の欄に各用途地域にかかる敷地面積を入れてください。</div></div>`;
+      <div class="note">建ぺい率・容積率は用途地域ごとに違います。下の「インフォマップで確認」で境界を見て、
+      またがっている場合は各用途地域にかかる敷地面積を入れてください。</div></div>`;
     $("#anbun").classList.remove("hide");
   }else{
     $("#anbun").classList.add("hide");
@@ -375,25 +384,40 @@ function renderToshi(lat,lng){
 function calcToshi(cand){
   const areas=[...document.querySelectorAll(".anbin")].map(el=>parseFloat(el.value)||0);
   const total=areas.reduce((a,b)=>a+b,0);
+  const bd=$("#toshi-breakdown");
   if(total<=0){
     const p=cand[0];
     $("#v-youto").textContent=p.n;
     $("#v-kenpei").textContent=p.b+"％";$("#v-yoseki").textContent=p.v+"％";
     $("#s-kenpei").textContent="";$("#s-yoseki").textContent="";
-    state.toshiOut={youto:p.n,b:p.b+"％",v:p.v+"％"};
+    bd.innerHTML=cand.length>1
+      ? "近くにある用途地域の指定値：<br>"+cand.map(z=>
+          `　<b>${z.n}</b>　建ぺい <b style="color:var(--orange)">${z.b}％</b>／容積 <b style="color:var(--orange)">${z.v}％</b>`+
+          (z.d?`（境界まで${Math.round(z.d)}m）`:"（この地点）")).join("<br>")
+      : "";
+    state.toshiOut={youto:p.n,b:p.b+"％",v:p.v+"％",breakdown:""};
     return;
   }
   const b=cand.reduce((s,z,i)=>s+z.b*areas[i],0)/total;
   const v=cand.reduce((s,z,i)=>s+z.v*areas[i],0)/total;
-  const used=cand.filter((_,i)=>areas[i]>0);
+  const used=cand.map((z,i)=>({...z,a:areas[i]})).filter(z=>z.a>0);
   const major=cand[areas.indexOf(Math.max(...areas))];
   const name=used.map(z=>z.n).join("・");
-  $("#v-youto").textContent=name;
   const r1=Math.round(b*10)/10, r2=Math.round(v*10)/10;
+  $("#v-youto").textContent=name;
   $("#v-kenpei").textContent=r1+"％";$("#v-yoseki").textContent=r2+"％";
   $("#s-kenpei").textContent=used.length>1?"按分値（合計"+total+"㎡）":"";
   $("#s-yoseki").textContent=used.length>1?"用途制限は "+major.n+" が適用":"";
-  state.toshiOut={youto:name,b:r1+"％",v:r2+"％",major:major.n};
+  const sepB=used.map(z=>z.b).join("・")+"％", sepV=used.map(z=>z.v).join("・")+"％";
+  bd.innerHTML=used.length>1
+    ? "内訳：<br>"+used.map(z=>
+        `　<b>${z.n}</b>　${z.a}㎡　建ぺい <b style="color:var(--orange)">${z.b}％</b>／容積 <b style="color:var(--orange)">${z.v}％</b>`).join("<br>")
+      +`<br><b>チラシに併記する場合：</b>建ぺい率 <b style="color:var(--orange)">${sepB}</b>　容積率 <b style="color:var(--orange)">${sepV}</b>`
+      +`<br><b>按分値を書く場合：</b>建ぺい率 <b style="color:var(--orange)">${r1}％</b>　容積率 <b style="color:var(--orange)">${r2}％</b>`
+    : "";
+  state.toshiOut={youto:name,b:r1+"％",v:r2+"％",major:major.n,
+    sepB:used.length>1?sepB:"", sepV:used.length>1?sepV:"",
+    breakdown:used.map(z=>`${z.n} ${z.a}㎡ 建ぺい${z.b}％/容積${z.v}％`).join("、")};
 }
 
 /* ══════════ メイン処理 ══════════ */
@@ -806,9 +830,27 @@ function initUI(){
   $("#zoneline").onchange=()=>{if(state.origin)drawMap();};
   $("#copytoshi").onclick=()=>{
     if(!state.toshiOut){say("先に調査を実行してください。","err");return;}
-    copy([`都市計画\t${state.toshi.layerName}`,`用途地域\t${state.toshiOut.youto}`,
-          `建ぺい率\t${state.toshiOut.b}`,`容積率\t${state.toshiOut.v}`].join("\n"),
-         "概要をコピーしました。Excelのセルに貼り付けてください。");
+    const t=state.toshiOut,L=[`都市計画\t${state.toshi.layerName}`,`用途地域\t${t.youto}`];
+    if(t.sepB){L.push(`建ぺい率\t${t.sepB}`,`容積率\t${t.sepV}`,
+                      `建ぺい率(按分)\t${t.b}`,`容積率(按分)\t${t.v}`,`内訳\t${t.breakdown}`);}
+    else{L.push(`建ぺい率\t${t.b}`,`容積率\t${t.v}`);}
+    copy(L.join("\n"),"概要をコピーしました。Excelのセルに貼り付けてください。");
+  };
+  // 富山市インフォマップ（mid=16 が都市計画情報）。{ADDR} に物件住所が入る
+  const INFOMAP_DEFAULT="https://www2.wagmap.jp/toyama/AddressSearch?mid=16&ac=&skw={ADDR}&skwt=0";
+  $("#infomap").onclick=e=>{
+    let tpl=localStorage.getItem("vivi_infomap_url")||INFOMAP_DEFAULT;
+    if(e.shiftKey){
+      const v=prompt("インフォマップのURL（{ADDR} が物件住所に置き換わります。空欄で既定に戻します）",tpl);
+      if(v===null)return;
+      if(v.trim())localStorage.setItem("vivi_infomap_url",v.trim());
+      else localStorage.removeItem("vivi_infomap_url");
+      tpl=v.trim()||INFOMAP_DEFAULT;
+    }
+    let a=(state.addr||"").replace(/\s|　/g,"").replace(/^富山県/,"");
+    if(a&&!/^富山市/.test(a))a="富山市"+a;
+    if(a)navigator.clipboard.writeText(a).catch(()=>{});
+    window.open(tpl.replace("{ADDR}",encodeURIComponent(a)),"_blank","noopener");
   };
   loadToshi().catch(()=>{
     $("#quota").innerHTML='<b style="color:#C62828">toyama-toshi.json を読み込めません。</b>shuhen-core.js と同じ場所に置いてください。用途地域の判定だけが使えない状態です。';
