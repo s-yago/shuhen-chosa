@@ -300,23 +300,23 @@ async function nearby(center,types,radius,n){
   const {Place,SearchNearbyRankPreference}=await google.maps.importLibrary("places");
   try{
     const{places}=await Place.searchNearby({
-      fields:["displayName","location"],
+      fields:["displayName","location","types"],
       locationRestriction:{center:new google.maps.LatLng(center.lat,center.lng),radius:radius},
       includedTypes:types, maxResultCount:n||5,
       rankPreference:SearchNearbyRankPreference.DISTANCE, language:"ja", region:"jp"
     });
-    return places.map(p=>({name:p.displayName,lat:p.location.lat(),lng:p.location.lng()}));
+    return places.map(p=>({name:p.displayName,lat:p.location.lat(),lng:p.location.lng(),types:p.types||[]}));
   }catch(e){console.warn("nearby失敗",types,e);return[];}
 }
 async function textNear(q,center,radius,n){
   const {Place,SearchByTextRankPreference}=await google.maps.importLibrary("places");
   try{
     const{places}=await Place.searchByText({
-      textQuery:q, fields:["displayName","location"], maxResultCount:n||5,
+      textQuery:q, fields:["displayName","location","types"], maxResultCount:n||5,
       locationBias:{center:new google.maps.LatLng(center.lat,center.lng),radius:radius},
       rankPreference:SearchByTextRankPreference.DISTANCE, language:"ja", region:"jp"
     });
-    return places.map(p=>({name:p.displayName,lat:p.location.lat(),lng:p.location.lng()}));
+    return places.map(p=>({name:p.displayName,lat:p.location.lat(),lng:p.location.lng(),types:p.types||[]}));
   }catch(e){console.warn("textNear失敗",q,e);return[];}
 }
 async function findPlace(q,center){
@@ -430,14 +430,19 @@ async function surveyAddress(addr,opt){
     }
     return out.sort((a,b)=>haversine(o,a)-haversine(o,b)).slice(0,5);
   };
+  // 駅とバス停は施設の種別で厳密に振り分ける（バス停が駅として出る事故を防ぐ）
+  const RAIL=["train_station","subway_station","light_rail_station"];
+  const BUS=["bus_stop","bus_station"];
+  const hasType=(p,list)=>(p.types||[]).some(t=>list.indexOf(t)>=0);
+  const isRail=p=>hasType(p,RAIL)||(!p.types||!p.types.length)&&/駅|電停/.test(p.name);
   const staJob=Promise.all([
-    nearby(o,["train_station","subway_station","light_rail_station","transit_station"],4000,8),
+    nearby(o,RAIL,5000,8),
     textNear("駅",o,3000,6)
-  ]).then(r=>dedupe(r.flat(),/バス停|停留所|バスターミナル/));
+  ]).then(r=>dedupe(r.flat().filter(isRail),/バス停|停留所|バスターミナル/));
   const busJob=Promise.all([
-    nearby(o,["bus_stop","bus_station"],1500,8),
+    nearby(o,BUS,1500,8),
     textNear("バス停",o,1200,6)
-  ]).then(r=>dedupe(r.flat()));
+  ]).then(r=>dedupe(r.flat().filter(p=>hasType(p,BUS)||!p.types||!p.types.length)));
 
   const [catRes,stations,buses]=await Promise.all([Promise.all(jobs),staJob,busJob]);
 
