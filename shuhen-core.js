@@ -186,18 +186,21 @@ function lookupGakku(addr){
 const ALLPAIRS=(()=>{const s=new Set();for(const[e,m]of GAKKU_RAW)s.add(e+"|"+m);return[...s].sort();})();
 
 
+const YOUJI_OK=/保育|幼稚|こども園|子ども園|認定こども/;
+// ドラッグストアは指定の5チェーンのみを対象にする
+const DRUG_OK=/クスリのアオキ|ウエルシア|ウェルシア|スギ薬局|スギドラッグ|コスモス|Ｖ・?ドラッグ|V・?drug|V・?ドラッグ|ブイドラッグ|Vドラッグ/i;
 const CATS=[
- {id:"youji",  label:"幼稚園・保育園", types:["preschool","child_care_agency","school"], text:["保育所","保育園","幼稚園","認定こども園"], r:1500, on:true},
+ {id:"youji",  label:"幼稚園・保育園", types:["preschool","child_care_agency","school"], text:["保育所","保育園","幼稚園","認定こども園"], filter:YOUJI_OK, r:1500, on:true},
  {id:"conv",   label:"コンビニ",       types:["convenience_store"],             r:1500, on:true},
  {id:"super",  label:"スーパー",       types:["supermarket","grocery_store"],   text:["スーパー"], r:2500, on:true},
- {id:"drug",   label:"ドラッグストア", types:["drugstore","pharmacy"],          text:["ドラッグストア"], r:2500, on:true},
+ {id:"drug",   label:"ドラッグストア", types:["drugstore","pharmacy"],
+    text:["クスリのアオキ","ウエルシア","スギ薬局","ディスカウントドラッグコスモス","V・drug"], filter:DRUG_OK, r:3000, on:true},
  {id:"sc",     label:"SC",             types:["shopping_mall"],                 r:4000, on:true},
  {id:"post",   label:"郵便局",         types:["post_office"],                   r:2500, on:true},
  {id:"bank",   label:"銀行",           types:["bank"],                          r:2500, on:true},
  {id:"hosp",   label:"病院・クリニック",types:["hospital","doctor"],            text:["病院"], r:3000, on:true},
  {id:"park",   label:"公園",           types:["park"],                          r:1200, on:false},
 ];
-const YOUJI_OK=/保育|幼稚|こども園|子ども園|認定こども/;
 const WALK=m=>Math.max(1,Math.ceil(m/80));
 
 /* ══════════ 用途地域・都市計画 ══════════ */
@@ -410,7 +413,7 @@ async function surveyAddress(addr,opt){
     ]);
     const seen=new Set(),out=[];
     for(const p of res.flat()){
-      if(c.id==="youji"&&!YOUJI_OK.test(p.name))continue;
+      if(c.filter&&!c.filter.test(p.name))continue;   // カテゴリごとの絞り込み
       const k=p.name+"|"+p.lat.toFixed(5);
       if(seen.has(k))continue;
       seen.add(k);out.push({...p,cat:c.id,catLabel:c.label});
