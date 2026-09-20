@@ -304,6 +304,7 @@ details.adv summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--na
         <button class="btn sm ghost" id="copytxt">一覧をコピー</button>
         <button class="btn sm ghost" id="copytsv">Excel用にコピー</button>
       </div>
+      <div class="hint" id="savedat"></div>
     </div>
   </div>
 
@@ -319,7 +320,8 @@ details.adv summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--na
         <button class="btn sm ghost" id="zreset">位置を戻す</button>
         <button class="btn sm ghost" id="fixpin">物件位置を直す</button>
         <label style="font-weight:700"><input type="checkbox" id="numlabel" checked> 番号を入れる</label>
-        <label style="font-weight:700"><input type="checkbox" id="gsistd"> 建物名を濃く</label>
+        <label style="font-weight:700"><input type="checkbox" id="gsistd" checked> 標準地図（外すと淡色）</label>
+        <label style="font-weight:700"><input type="checkbox" id="tone" checked> 建物の色を抑える</label>
         <label style="font-weight:700"><input type="checkbox" id="zoneline"> 用途地域の境界（確認用）</label>
       </div>
       <div class="mapstage" id="stage"></div>
@@ -396,6 +398,7 @@ function calcToshi(cand){
           (z.d?`（境界まで${Math.round(z.d)}m）`:"（この地点）")).join("<br>")
       : "";
     state.toshiOut={youto:p.n,b:p.b+"％",v:p.v+"％",breakdown:""};
+    saveResult();
     return;
   }
   const b=cand.reduce((s,z,i)=>s+z.b*areas[i],0)/total;
@@ -418,6 +421,7 @@ function calcToshi(cand){
   state.toshiOut={youto:name,b:r1+"％",v:r2+"％",major:major.n,
     sepB:used.length>1?sepB:"", sepV:used.length>1?sepV:"",
     breakdown:used.map(z=>`${z.n} ${z.a}㎡ 建ぺい${z.b}％/容積${z.v}％`).join("、")};
+  saveResult();
 }
 
 /* ══════════ メイン処理 ══════════ */
@@ -433,6 +437,7 @@ async function run(){
 
     // 学区を先に出して、手動選択があればそれを調査に渡す
     const gk=lookupGakku(addr);
+    state.gakku=gk;
     renderSchoolBox(gk,addr);
     if(!gk.hits.length)say("この住所は通学区域表に見つかりませんでした。学区を手動で選んでください。","err");
 
@@ -477,7 +482,10 @@ function renderSchoolBox(gk,addr){
   const sel=$("#pick");
   if(!sel.options.length){
     sel.innerHTML='<option value="">— 未選択 —</option>'+
-      ALLPAIRS.map(p=>{const[e,m]=p.split("|");return `<option value="${p}">${e}小学校 ／ ${m}中学校</option>`;}).join("");
+      ALLPAIRS.map(p=>{const[e,m]=p.split("|");
+        return `<option value="${p}">`+(e===m&&/学園/.test(e)
+          ? viviSchoolName(e,"")
+          : viviSchoolName(e,"小学校")+" ／ "+viviSchoolName(m,"中学校"))+`</option>`;}).join("");
   }
   const warnBox=$("#school-warn");warnBox.innerHTML="";
   if(gk.hits.length){
@@ -508,10 +516,16 @@ function renderSchoolBox(gk,addr){
   renderOvr();
   syncSchoolLabels();
 }
+// 義務教育学校（名前に「学園」を含む）は「小学校」「中学校」を付けない
+function viviSchoolName(n,kind,withCity){
+  if(!n)return "";
+  const s=/学園/.test(n)?n:n+kind;
+  return withCity?("富山市立"+s):s;
+}
 function syncSchoolLabels(){
   const p=currentPair();
-  $("#v-sho").textContent=p.e?p.e+"小学校":"－";
-  $("#v-chu").textContent=p.m?p.m+"中学校":"－";
+  $("#v-sho").textContent=p.e?viviSchoolName(p.e,"小学校"):"－";
+  $("#v-chu").textContent=p.m?viviSchoolName(p.m,"中学校"):"－";
 }
 
 function pickRows(){
@@ -578,15 +592,16 @@ function renderFac(){
     renderFac();autoZoom();drawMap();
   });
   tb.querySelectorAll(".showchk").forEach(s=>s.onchange=e=>{
-    state.rows[+e.target.dataset.i].show=e.target.checked;drawMap();
+    state.rows[+e.target.dataset.i].show=e.target.checked;drawMap();saveResult();
   });
+  saveResult();
 }
 async function refreshSchools(){
   syncSchoolLabels();
   const p=currentPair();
   if(!state.origin||!state.rows.length)return;
   const o=state.origin;
-  const names={sho:p.e?"富山市立"+p.e+"小学校":null, chu:p.m?"富山市立"+p.m+"中学校":null};
+  const names={sho:p.e?viviSchoolName(p.e,"小学校",true):null, chu:p.m?viviSchoolName(p.m,"中学校",true):null};
   say("学校を検索し直しています…");
   try{
     const found={};
@@ -615,27 +630,66 @@ async function refreshSchools(){
 let OPR={};
 function loadOpr(){try{OPR=JSON.parse(localStorage.getItem("vivi_transit_op")||"{}");}catch(e){OPR={};}}
 function saveOpr(){localStorage.setItem("vivi_transit_op",JSON.stringify(OPR));}
+// 提案書ビルダーへの引き継ぎ用。差し替え・並び替えの結果を反映したものを保存する
+function saveResult(){
+  if(!state.origin||!state.addr)return;
+  const findRow=lb=>state.rows.find(r=>r.must&&r.catLabel===lb);
+  const ordered=(sel,list)=>sel?[sel,...(list||[]).filter(x=>x.name!==sel.name)]:(list||[]);
+  const data={
+    origin:state.origin,
+    gakku:state.gakku||null,
+    pair:currentPair(),
+    toshi:state.toshi||null,
+    toshiOut:state.toshiOut||null,
+    sho:findRow("小学校")||state.sho,
+    chu:findRow("中学校")||state.chu,
+    facilities:state.rows.filter(r=>!r.must),
+    rows:state.rows,
+    stations:ordered(state.station,state.staList),
+    buses:ordered(state.bus,state.busList),
+    operators:OPR
+  };
+  try{
+    localStorage.setItem("vivi_shuhen_result",JSON.stringify({addr:state.addr,savedAt:Date.now(),data}));
+    const el=$("#savedat");
+    if(el)el.textContent="提案書ビルダーへの引き継ぎ用に保存しました（"+new Date().toLocaleTimeString("ja-JP")+" 時点）";
+  }catch(e){console.warn("引き継ぎ用の保存に失敗",e);}
+}
+// 路線名：共通部品が付けた line を既定にし、手入力があればそちらを優先
+function autoLine(p){
+  if(!p||!p.line)return "";
+  return p.line.split("／").slice(0,2).join("／");   // 長いので先頭2路線まで
+}
+function opLabel(p){
+  if(!p)return "";
+  return ((OPR[p.name]||"").trim())||autoLine(p);
+}
 function transLabel(p){
   if(!p)return null;
-  const op=(OPR[p.name]||"").trim();
+  const op=opLabel(p);
   return (op?op+"「"+p.name+"」":p.name)+"　徒歩"+p.mins+"分";
 }
 function renderTrans(){
   const set=(p,list,vId,mId,opId,swId,key)=>{
-    const op=p?(OPR[p.name]||""):"";
-    $(vId).innerHTML=p?(op?`<span style="font-size:15px;color:var(--ink-m)">${op}</span><br>${p.name}`:p.name)
+    const manual=p?(OPR[p.name]||""):"";
+    const disp=opLabel(p);
+    $(vId).innerHTML=p?(disp?`<span style="font-size:15px;color:var(--ink-m)">${disp}</span><br>${p.name}`:p.name)
                       :"見つかりませんでした";
     $(mId).textContent=p?`徒歩${p.mins}分（${p.m}m${p.est?"・直線推定":""}）`:"";
     const el=$(opId);
-    el.value=op;
+    el.value=manual;
+    el.placeholder=autoLine(p)?`自動：${autoLine(p)}（変えたいときだけ入力）`:"事業者・路線名（入れると記憶します）";
     el.oninput=()=>{if(p){OPR[p.name]=el.value.trim();saveOpr();renderTrans();}};
     const sw=$(swId);
-    sw.innerHTML=list.map(x=>`<option value="${x.name}"${p&&x.name===p.name?" selected":""}>${x.name}（${x.mins}分）</option>`).join("")
-      ||'<option>候補なし</option>';
+    sw.innerHTML=list.map(x=>{
+      const l=autoLine(x);
+      return `<option value="${x.name}"${p&&x.name===p.name?" selected":""}>${l?l+"　":""}${x.name}（${x.mins}分）</option>`;
+    }).join("")||'<option>候補なし</option>';
     sw.onchange=()=>{state[key]=list.find(x=>x.name===sw.value);renderTrans();};
   };
   set(state.station,state.staList||[],"#v-sta","#m-sta","#op-sta","#sw-sta","station");
   set(state.bus,state.busList||[],"#v-bus","#m-bus","#op-bus","#sw-bus","bus");
+  saveResult();
 }
 
 /* ══════════ 地図 ══════════ */
@@ -891,6 +945,7 @@ function initUI(){
   $("#zreset").onclick=()=>{autoZoom();drawMap();};
   $("#fixpin").onclick=()=>setFixing(!state.fixing);
   $("#numlabel").onchange=drawMap;$("#gsistd").onchange=drawMap;$("#remap").onclick=drawMap;
+  $("#tone").onchange=()=>{MAP_TONE.on=$("#tone").checked;drawMap();};
 
   $("#copyimg").onclick=async()=>{
     if(!(state.img instanceof HTMLCanvasElement))return;
@@ -926,7 +981,7 @@ function tsv(){
     rows.push(["建ぺい率",state.toshiOut.b,""]);
     rows.push(["容積率",state.toshiOut.v,""]);
   }
-  const nm=p=>{const o=(OPR[p.name]||"").trim();return o?o+"「"+p.name+"」":p.name;};
+  const nm=p=>{const o=opLabel(p);return o?o+"「"+p.name+"」":p.name;};
   if(state.station)rows.push(["最寄り駅",nm(state.station),state.station.mins]);
   if(state.bus)rows.push(["最寄りバス停",nm(state.bus),state.bus.mins]);
   state.rows.forEach(r=>rows.push([r.catLabel,r.name,r.mins]));
