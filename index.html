@@ -355,6 +355,8 @@ details.adv summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--na
 <script>
 /* ══════════ 設定 ══════════ */
 const $=s=>document.querySelector(s);
+// ピンの色。共通部品が古い場合でも動くように代替を用意する
+const PINC=(typeof PIN!=="undefined")?PIN:{prop:"#C62828",fac:"#0F2A4D"};
 const state={origin:null,addr:"",sho:null,chu:null,cands:[],rows:[],station:null,bus:null,staList:[],busList:[],zoom:16,base:"gsi",img:null,tainted:false,pan:{x:0,y:0},fixing:false,toshi:null,toshiOut:null};
 
 function say(t,kind){const e=$("#msg");e.className="status on "+(kind||"info");e.innerHTML=t;}
@@ -817,7 +819,7 @@ function drawPins(ctx,center,z){
     if(x<-20||x>OUT_W+20||y<-20||y>OUT_H+20)continue;
     const isProp=p.kind==="prop", r=isProp?11:(num?10:7);
     ctx.beginPath();ctx.arc(x,y,r+3,0,7);ctx.fillStyle="#fff";ctx.fill();
-    ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fillStyle=isProp?PIN.prop:PIN.fac;ctx.fill();
+    ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fillStyle=isProp?PINC.prop:PINC.fac;ctx.fill();
     if(isProp){ctx.beginPath();ctx.arc(x,y,4,0,7);ctx.fillStyle="#fff";ctx.fill();}
     else if(num){ctx.fillStyle="#fff";ctx.font="bold 14px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(String(p.n),x,y+.5);}
   }
@@ -866,14 +868,23 @@ function showMap(el){
   enableDrag(el);
   $("#copyimg").disabled=state.tainted;$("#dlimg").disabled=state.tainted;
   $("#maphint").innerHTML="<b>地図をドラッグすると位置を動かせます。</b>"+
-    `<b style="color:${PIN.prop}">●</b> 物件　<b style="color:${PIN.fac}">●</b> 一覧の番号と対応<br>`
+    `<b style="color:${PINC.prop}">●</b> 物件　<b style="color:${PINC.fac}">●</b> 一覧の番号と対応<br>`
     +(state.tainted
     ? "この画像はブラウザ経由で直接コピーできません。画像を<b>右クリック →「画像をコピー」</b>で Excel に貼り付けてください。"
     : (state.base==="gsi"
        ? "チラシに使う場合は「出典：国土地理院ウェブサイト」の表記を残してください。この表記があれば印刷・配布ができます。"
        : "Google の地図を印刷物に使う場合は、Google Maps Platform の利用規約をご確認ください。"));
 }
-function drawMap(){ state.base==="gsi"?drawGsi():drawGoogle(); }
+function drawMap(){
+  try{
+    const r=state.base==="gsi"?drawGsi():drawGoogle();
+    if(r&&r.catch)r.catch(e=>{console.error(e);
+      say("地図を描けませんでした。表示は前のままです。<br>"+(e.message||e),"err");});
+  }catch(e){
+    console.error(e);
+    say("地図を描けませんでした。表示は前のままです。<br>"+(e.message||e),"err");
+  }
+}
 
 /* ══════════ UI ══════════ */
 function initUI(){
@@ -896,13 +907,14 @@ function initUI(){
 
   loadOpr();
   $("#zoneline").onchange=()=>{if(state.origin)drawMap();};
-  $("#copytoshi").onclick=()=>{
+  $("#copytoshi").onclick=e=>{
+    const btn=e.currentTarget;
     if(!state.toshiOut){say("先に調査を実行してください。","err");return;}
     const t=state.toshiOut,L=[`都市計画\t${state.toshi.layerName}`,`用途地域\t${t.youto}`];
     if(t.sepB){L.push(`建ぺい率\t${t.sepB}`,`容積率\t${t.sepV}`,
                       `建ぺい率(按分)\t${t.b}`,`容積率(按分)\t${t.v}`,`内訳\t${t.breakdown}`);}
     else{L.push(`建ぺい率\t${t.b}`,`容積率\t${t.v}`);}
-    copy(L.join("\n"),"概要をコピーしました。Excelのセルに貼り付けてください。");
+    copy(L.join("\n"),"概要をコピーしました。Excelのセルに貼り付けてください。",btn);
   };
   // 富山市インフォマップ（mid=16 が都市計画情報）。{ADDR} に物件住所が入る
   const INFOMAP_DEFAULT="https://www2.wagmap.jp/toyama/AddressSearch?mid=16&ac=&skw={ADDR}&skwt=0";
@@ -933,7 +945,7 @@ function initUI(){
     const[e,m]=v.split("|");
     say(`「${t}」を ${e}小学校／${m}中学校 として登録しました。次回からこの学区になります。`,"ok");
   };
-  $("#ovr-copy").onclick=()=>copy($("#ovr-json").value,"登録内容をコピーしました。他のPCの同じ欄に貼り付けてください。");
+  $("#ovr-copy").onclick=e=>copy($("#ovr-json").value,"登録内容をコピーしました。他のPCの同じ欄に貼り付けてください。",e.currentTarget);
   $("#ovr-load").onclick=()=>{
     try{
       const o=JSON.parse($("#ovr-json").value.trim()||"{}");
@@ -960,25 +972,37 @@ function initUI(){
   $("#fixpin").onclick=()=>setFixing(!state.fixing);
   $("#numlabel").onchange=drawMap;$("#gsistd").onchange=drawMap;$("#remap").onclick=drawMap;
   $("#tone").onchange=()=>{MAP_TONE.on=$("#tone").checked;drawMap();};
-  $("#pincol").onchange=()=>{PIN.fac=$("#pincol").value;drawMap();};
+  $("#pincol").onchange=()=>{PINC.fac=$("#pincol").value;drawMap();};
   $("#fade").onchange=()=>{MAP_TONE.fade=parseFloat($("#fade").value);drawMap();};
 
-  $("#copyimg").onclick=async()=>{
+  $("#copyimg").onclick=async e=>{
+    const btn=e.currentTarget;
     if(!(state.img instanceof HTMLCanvasElement))return;
     state.img.toBlob(async b=>{
-      try{await navigator.clipboard.write([new ClipboardItem({"image/png":b})]);say("画像をコピーしました。Excel で貼り付けてください。","ok");}
-      catch(e){say("コピーできませんでした。「PNGで保存」をお使いください。","err");}
+      try{
+        await navigator.clipboard.write([new ClipboardItem({"image/png":b})]);
+        say("画像をコピーしました。Excel で貼り付けてください。","ok");
+        flashBtn(btn,"コピーしました ✓",true);
+      }catch(err){
+        say("コピーできませんでした。「PNGで保存」をお使いください。","err");
+        flashBtn(btn,"コピーできません",false);
+      }
     });
   };
-  $("#dlimg").onclick=()=>{
+  $("#dlimg").onclick=e=>{
     if(!(state.img instanceof HTMLCanvasElement))return;
     const a=document.createElement("a");
     a.download=`周辺地図_${state.addr.replace(/[\\/:*?"<>|]/g,"")}.png`;
     a.href=state.img.toDataURL("image/png");a.click();
+    flashBtn(e.currentTarget,"保存しました ✓",true);
   };
-  $("#copytxt").onclick=()=>copy(lines().join("\n"),"一覧をコピーしました。");
-  $("#copytsv").onclick=()=>copy(tsv(),"Excel用にコピーしました。セルに貼り付けてください。");
+  $("#copytxt").onclick=e=>copy(lines().join("\n"),"一覧をコピーしました。",e.currentTarget);
+  $("#copytsv").onclick=e=>copy(tsv(),"Excel用にコピーしました。セルに貼り付けてください。",e.currentTarget);
 
+  if(typeof MAP_TONE==="undefined"){
+    $("#quota").innerHTML='<b style="color:#C62828">shuhen-core.js が古いか読み込めていません。</b>'+
+      '最新のものに差し替えて、Ctrl+Shift+R で読み直してください。';
+  }
   $("#credit").innerHTML="地図：国土地理院（地理院タイル）／ Google Maps Platform　｜　学区：富山市小中学校通学区域表（令和6年8月4日改正）　｜　徒歩分数＝道路距離÷80m（1分未満切り上げ）";
   $("#quota").textContent="1件あたりの目安：Geocoding 1回・Places 約10回・距離計算 1回";
 }
@@ -1003,7 +1027,23 @@ function tsv(){
   state.rows.forEach(r=>rows.push([r.catLabel,r.name,r.mins]));
   return rows.map(r=>r.join("\t")).join("\n");
 }
-function copy(t,ok){navigator.clipboard.writeText(t).then(()=>say(ok,"ok"),()=>say("コピーできませんでした。","err"));}
+// 押したボタン自体を一時的に変えて、コピーできたことが手元で分かるようにする
+function flashBtn(btn,msg,okFlag){
+  if(!btn)return;
+  if(btn.dataset.busy)return;
+  btn.dataset.busy="1";
+  const t=btn.textContent, bg=btn.style.background, co=btn.style.color, bd=btn.style.borderColor;
+  btn.textContent=msg;
+  btn.style.background=okFlag?"#1B6B2F":"#C62828";
+  btn.style.color="#fff"; btn.style.borderColor=okFlag?"#1B6B2F":"#C62828";
+  setTimeout(()=>{btn.textContent=t;btn.style.background=bg;btn.style.color=co;
+    btn.style.borderColor=bd;delete btn.dataset.busy;},1800);
+}
+function copy(t,ok,btn){
+  navigator.clipboard.writeText(t).then(
+    ()=>{say(ok,"ok");flashBtn(btn,"コピーしました ✓",true);},
+    ()=>{say("コピーできませんでした。","err");flashBtn(btn,"コピーできません",false);});
+}
 initUI();
 </script>
 </body>
