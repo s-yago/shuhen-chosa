@@ -482,8 +482,11 @@ async function surveyAddress(addr,opt){
 /* ══════════ 地図の色味 ══════════ */
 // 地図調整ツールで決めた設定。標準地図の建物色をここで抑えている。
 // 座標計算には一切触れず、取得した画像の色だけを置き換えるので位置はずれない。
+// ピンの色。地図の色に負けないよう、施設は既定で濃紺にしている
+const PIN={prop:"#C62828", fac:"#0F2A4D"};
 const MAP_TONE={
   on:true,
+  fade:1.00,              // 地図全体の彩度（1.00でそのまま。下げると地図が退いてピンが際立つ）
   bldg:[[255,230,190]],   // 建物として扱う色（標準地図の建物の面）
   road:[],                // 道路として扱う色（拾っていない）
   tol:42,                 // 色の許容幅
@@ -492,7 +495,8 @@ const MAP_TONE={
   roadSat:1.40            // 道路の鮮やかさ
 };
 function applyMapTone(ctx,W,H){
-  if(!MAP_TONE.on||(!MAP_TONE.bldg.length&&!MAP_TONE.road.length))return;
+  const fade=MAP_TONE.fade!==1;
+  if(!fade&&(!MAP_TONE.on||(!MAP_TONE.bldg.length&&!MAP_TONE.road.length)))return;
   let d;
   try{ d=ctx.getImageData(0,0,W,H); }catch(e){ return; }   // 読めないときは何もしない
   const a=d.data, t=MAP_TONE.tol;
@@ -504,14 +508,21 @@ function applyMapTone(ctx,W,H){
     return false;
   };
   for(let i=0;i<a.length;i+=4){
-    const r=a[i],g=a[i+1],b=a[i+2];
-    if(near(r,g,b,MAP_TONE.bldg)){
+    let r=a[i],g=a[i+1],b=a[i+2];
+    if(MAP_TONE.on&&near(r,g,b,MAP_TONE.bldg)){
       const gy=0.299*r+0.587*g+0.114*b, k=MAP_TONE.deSat, m=MAP_TONE.bright;
-      a[i]=(r+(gy-r)*k)*m; a[i+1]=(g+(gy-g)*k)*m; a[i+2]=(b+(gy-b)*k)*m;
-    }else if(near(r,g,b,MAP_TONE.road)){
+      r=(r+(gy-r)*k)*m; g=(g+(gy-g)*k)*m; b=(b+(gy-b)*k)*m;
+    }else if(MAP_TONE.on&&near(r,g,b,MAP_TONE.road)){
       const av=(r+g+b)/3, s=MAP_TONE.roadSat;
-      a[i]=av+(r-av)*s; a[i+1]=av+(g-av)*s; a[i+2]=av+(b-av)*s;
+      r=av+(r-av)*s; g=av+(g-av)*s; b=av+(b-av)*s;
     }
+    if(fade){                       // 地図全体を退かせる（白に寄せつつ彩度を落とす）
+      const f=MAP_TONE.fade, av=(r+g+b)/3;
+      r=av+(r-av)*f; g=av+(g-av)*f; b=av+(b-av)*f;
+      const w=1-f;
+      r=r+(255-r)*w*0.45; g=g+(255-g)*w*0.45; b=b+(255-b)*w*0.45;
+    }
+    a[i]=r; a[i+1]=g; a[i+2]=b;
   }
   ctx.putImageData(d,0,0);
 }
@@ -621,9 +632,9 @@ async function renderShuhenMap(opt){
       placed.push(box);
       const prop=it.kind==="prop";
       ctx.fillStyle="rgba(255,255,255,.94)";
-      ctx.strokeStyle=prop?"#C62828":"#0F2A4D";ctx.lineWidth=prop?2.5:1.6;
+      ctx.strokeStyle=prop?PIN.prop:PIN.fac;ctx.lineWidth=prop?2.5:1.6;
       roundRect(ctx,box.x,box.y,box.w,box.h,6);ctx.fill();ctx.stroke();
-      ctx.fillStyle=prop?"#C62828":"#16222F";
+      ctx.fillStyle=prop?PIN.prop:"#16222F";
       ctx.textAlign="left";ctx.textBaseline="middle";
       ctx.fillText(label,box.x+8,box.y+th/2);
     }
@@ -631,7 +642,7 @@ async function renderShuhenMap(opt){
   for(const it of items){
     const prop=it.kind==="prop", r=opt.pinR||(prop?13:11);
     ctx.beginPath();ctx.arc(it.x,it.y,r+3.5,0,7);ctx.fillStyle="#fff";ctx.fill();
-    ctx.beginPath();ctx.arc(it.x,it.y,r,0,7);ctx.fillStyle=prop?"#C62828":"#E8730C";ctx.fill();
+    ctx.beginPath();ctx.arc(it.x,it.y,r,0,7);ctx.fillStyle=prop?PIN.prop:PIN.fac;ctx.fill();
     if(prop){ctx.beginPath();ctx.arc(it.x,it.y,4.5,0,7);ctx.fillStyle="#fff";ctx.fill();}
     else if(it.n!=null){
       ctx.fillStyle="#fff";ctx.font=`bold ${Math.round(r*1.35)}px sans-serif`;
