@@ -479,6 +479,43 @@ async function surveyAddress(addr,opt){
   };
 }
 
+/* ══════════ 地図の色味 ══════════ */
+// 地図調整ツールで決めた設定。標準地図の建物色をここで抑えている。
+// 座標計算には一切触れず、取得した画像の色だけを置き換えるので位置はずれない。
+const MAP_TONE={
+  on:true,
+  bldg:[[255,230,190]],   // 建物として扱う色（標準地図の建物の面）
+  road:[],                // 道路として扱う色（拾っていない）
+  tol:42,                 // 色の許容幅
+  deSat:0.62,             // 建物の色を抜く度合い（1.00で完全にグレー）
+  bright:0.98,            // 建物の明るさ
+  roadSat:1.40            // 道路の鮮やかさ
+};
+function applyMapTone(ctx,W,H){
+  if(!MAP_TONE.on||(!MAP_TONE.bldg.length&&!MAP_TONE.road.length))return;
+  let d;
+  try{ d=ctx.getImageData(0,0,W,H); }catch(e){ return; }   // 読めないときは何もしない
+  const a=d.data, t=MAP_TONE.tol;
+  const near=(r,g,b,list)=>{
+    for(let i=0;i<list.length;i++){
+      const c=list[i];
+      if(Math.abs(r-c[0])<=t&&Math.abs(g-c[1])<=t&&Math.abs(b-c[2])<=t)return true;
+    }
+    return false;
+  };
+  for(let i=0;i<a.length;i+=4){
+    const r=a[i],g=a[i+1],b=a[i+2];
+    if(near(r,g,b,MAP_TONE.bldg)){
+      const gy=0.299*r+0.587*g+0.114*b, k=MAP_TONE.deSat, m=MAP_TONE.bright;
+      a[i]=(r+(gy-r)*k)*m; a[i+1]=(g+(gy-g)*k)*m; a[i+2]=(b+(gy-b)*k)*m;
+    }else if(near(r,g,b,MAP_TONE.road)){
+      const av=(r+g+b)/3, s=MAP_TONE.roadSat;
+      a[i]=av+(r-av)*s; a[i+1]=av+(g-av)*s; a[i+2]=av+(b-av)*s;
+    }
+  }
+  ctx.putImageData(d,0,0);
+}
+
 /* ══════════ 地理院タイルの描画 ══════════ */
 const MAXZ_GSI={pale:16,std:18};
 const tileProbe={};
@@ -515,6 +552,7 @@ async function drawGsiTiles(ctx,center,z,W,H,layer){
     }
   }
   await Promise.all(jobs);
+  applyMapTone(ctx,W,H);
 }
 function gsiCredit(ctx,W,H,size){
   size=size||15;
@@ -556,7 +594,7 @@ async function renderShuhenMap(opt){
   const center=opt.center||centerOf(pts,z);
   const cv=document.createElement("canvas");cv.width=W;cv.height=H;
   const ctx=cv.getContext("2d");
-  await drawGsiTiles(ctx,center,z,W,H,opt.layer||"pale");
+  await drawGsiTiles(ctx,center,z,W,H,opt.layer||"std");
 
   const c=project(center.lat,center.lng,z),L=c.x-W/2,T=c.y-H/2;
   const items=pts.map(p=>{const q=project(p.lat,p.lng,z);return{...p,x:q.x-L,y:q.y-T};})
