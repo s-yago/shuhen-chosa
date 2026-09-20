@@ -322,6 +322,20 @@ details.adv summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--na
         <label style="font-weight:700"><input type="checkbox" id="numlabel" checked> 番号を入れる</label>
         <label style="font-weight:700"><input type="checkbox" id="gsistd" checked> 標準地図（外すと淡色）</label>
         <label style="font-weight:700"><input type="checkbox" id="tone" checked> 建物の色を抑える</label>
+        <label style="font-weight:700">ピンの色
+          <select id="pincol" style="padding:5px 8px;border:1.5px solid var(--line);border-radius:4px;font-size:14px">
+            <option value="#0F2A4D">濃紺</option>
+            <option value="#1B6B2F">深緑</option>
+            <option value="#6A1B9A">紫</option>
+            <option value="#111111">黒</option>
+            <option value="#E8730C">オレンジ</option>
+          </select></label>
+        <label style="font-weight:700">地図の濃さ
+          <select id="fade" style="padding:5px 8px;border:1.5px solid var(--line);border-radius:4px;font-size:14px">
+            <option value="1">そのまま</option>
+            <option value="0.7">やや薄く</option>
+            <option value="0.45">かなり薄く</option>
+          </select></label>
         <label style="font-weight:700"><input type="checkbox" id="zoneline"> 用途地域の境界（確認用）</label>
       </div>
       <div class="mapstage" id="stage"></div>
@@ -803,7 +817,7 @@ function drawPins(ctx,center,z){
     if(x<-20||x>OUT_W+20||y<-20||y>OUT_H+20)continue;
     const isProp=p.kind==="prop", r=isProp?11:(num?10:7);
     ctx.beginPath();ctx.arc(x,y,r+3,0,7);ctx.fillStyle="#fff";ctx.fill();
-    ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fillStyle=isProp?"#C62828":"#E8730C";ctx.fill();
+    ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fillStyle=isProp?PIN.prop:PIN.fac;ctx.fill();
     if(isProp){ctx.beginPath();ctx.arc(x,y,4,0,7);ctx.fillStyle="#fff";ctx.fill();}
     else if(num){ctx.fillStyle="#fff";ctx.font="bold 14px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(String(p.n),x,y+.5);}
   }
@@ -852,7 +866,7 @@ function showMap(el){
   enableDrag(el);
   $("#copyimg").disabled=state.tainted;$("#dlimg").disabled=state.tainted;
   $("#maphint").innerHTML="<b>地図をドラッグすると位置を動かせます。</b>"+
-    '<b style="color:#C62828">●</b> 物件　<b style="color:#E8730C">●</b> 一覧の番号と対応<br>'
+    `<b style="color:${PIN.prop}">●</b> 物件　<b style="color:${PIN.fac}">●</b> 一覧の番号と対応<br>`
     +(state.tainted
     ? "この画像はブラウザ経由で直接コピーできません。画像を<b>右クリック →「画像をコピー」</b>で Excel に貼り付けてください。"
     : (state.base==="gsi"
@@ -946,6 +960,8 @@ function initUI(){
   $("#fixpin").onclick=()=>setFixing(!state.fixing);
   $("#numlabel").onchange=drawMap;$("#gsistd").onchange=drawMap;$("#remap").onclick=drawMap;
   $("#tone").onchange=()=>{MAP_TONE.on=$("#tone").checked;drawMap();};
+  $("#pincol").onchange=()=>{PIN.fac=$("#pincol").value;drawMap();};
+  $("#fade").onchange=()=>{MAP_TONE.fade=parseFloat($("#fade").value);drawMap();};
 
   $("#copyimg").onclick=async()=>{
     if(!(state.img instanceof HTMLCanvasElement))return;
