@@ -274,8 +274,9 @@ details.adv summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--na
     <div class="body"><div class="trans">
       <div class="tbox"><div class="k">最寄り駅</div>
         <div class="v" id="v-sta">－</div><div class="m" id="m-sta"></div>
-        <input type="text" id="op-sta" list="dl-sta" placeholder="事業者・路線名（入れると記憶します）">
-        <select class="swap" id="sw-sta" style="width:100%;margin-top:4px"></select></div>
+        <select class="swap" id="linesel" style="width:100%;margin-top:6px"></select>
+        <select class="swap" id="sw-sta" style="width:100%;margin-top:4px"></select>
+        <input type="text" id="op-sta" list="dl-sta" placeholder="路線名を書き換えたいときだけ入力"></div>
       <div class="tbox"><div class="k">最寄りバス停</div>
         <div class="v" id="v-bus">－</div><div class="m" id="m-bus"></div>
         <input type="text" id="op-bus" list="dl-bus" placeholder="事業者名（入れると記憶します）">
@@ -710,7 +711,22 @@ function renderTrans(){
     }).join("")||'<option>候補なし</option>';
     sw.onchange=()=>{state[key]=list.find(x=>x.name===sw.value);renderTrans();};
   };
-  set(state.station,state.staList||[],"#v-sta","#m-sta","#op-sta","#sw-sta","station");
+  // 路線で絞り込む。選ぶとその路線の最寄り駅に切り替わる
+  const ls=$("#linesel"), all=state.staList||[];
+  const lines=[];
+  all.forEach(x=>(x.line||"").split("／").forEach(l=>{if(l&&lines.indexOf(l)<0)lines.push(l);}));
+  const cur=lines.indexOf(ls.dataset.v||"")>=0?ls.dataset.v:"";
+  ls.innerHTML='<option value="">すべての路線から最寄り</option>'+
+    lines.map(l=>`<option value="${l}"${l===cur?" selected":""}>${l}</option>`).join("");
+  ls.value=cur; ls.dataset.v=cur;
+  const shown=all.filter(x=>!cur||(x.line||"").indexOf(cur)>=0);
+  ls.onchange=()=>{
+    ls.dataset.v=ls.value;
+    const f=all.filter(x=>!ls.value||(x.line||"").indexOf(ls.value)>=0);
+    state.station=f[0]||null;
+    renderTrans();
+  };
+  set(state.station,shown,"#v-sta","#m-sta","#op-sta","#sw-sta","station");
   set(state.bus,state.busList||[],"#v-bus","#m-bus","#op-bus","#sw-bus","bus");
   saveResult();
 }
