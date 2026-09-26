@@ -184,6 +184,9 @@ const ALLPAIRS=(()=>{const s=new Set();for(const[e,m]of GAKKU_RAW)s.add(e+"|"+m)
 
 const YOUJI_OK=/保育|幼稚|こども園|子ども園|認定こども/;
 // スーパーの候補から外す専門店。昆布屋・鱒の寿司屋・和菓子店などが枠を埋めないようにする
+// 名指しで探すスーパー。分類が「スーパー」になっていない店でも確実に拾える。
+// 候補に出ない店があれば、ここに店名を足すだけでよい。
+const SUPER_CHAINS=["アルビス","大阪屋ショップ","バロー","ピアゴ"];
 const SUPER_NG=/昆布|こんぶ|コンブ|佃煮|つくだ煮|かまぼこ|蒲鉾|梅かま|練り物|和菓子|洋菓子|菓子店|ケーキ|煎餅|せんべい|酒店|酒販|地酒|茶舗|茶店|海苔|のり店|豆腐|精肉|鮮魚|青果|乾物|珍味|漬物|味噌|醤油|米穀|米店|パン工房|ベーカリー|寿司|鮨|すし処|弁当|惣菜|直売所|物産|土産|商店街|市場$/;
 // 大型商業施設。中のテナントが個別に出ないよう、この施設名にまとめる
 const MALLS=[
@@ -206,7 +209,7 @@ const CATS=[
  {id:"youji",  label:"幼稚園・保育園", types:["preschool","child_care_agency","school"], text:["保育所","保育園","幼稚園","認定こども園"], filter:YOUJI_OK, r:1500, on:true},
  {id:"conv",   label:"コンビニ",       types:["convenience_store"],             r:1500, on:true},
  {id:"super",  label:"スーパー",       types:["supermarket"], primary:true,
-    text:["スーパー","アルビス","大阪屋ショップ","バロー"], ng:SUPER_NG, keep:10, r:2500, on:true},
+    text:["スーパー"].concat(SUPER_CHAINS), ng:SUPER_NG, keep:10, r:2500, on:true},
  {id:"drug",   label:"ドラッグストア", types:["drugstore","pharmacy"],
     text:["クスリのアオキ","ウエルシア","スギ薬局","ディスカウントドラッグコスモス","V・drug"], filter:DRUG_OK, r:3000, on:true},
  {id:"sc",     label:"SC",             types:["shopping_mall"],                 r:4000, on:true},
