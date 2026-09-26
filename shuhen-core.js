@@ -183,6 +183,21 @@ const ALLPAIRS=(()=>{const s=new Set();for(const[e,m]of GAKKU_RAW)s.add(e+"|"+m)
 
 
 const YOUJI_OK=/保育|幼稚|こども園|子ども園|認定こども/;
+// 大型商業施設。中のテナントが個別に出ないよう、この施設名にまとめる
+const MALLS=[
+  {key:/富山大和|大和富山/,                 name:"富山大和"},
+  {key:/総曲輪フェリオ|フェリオ/,           name:"総曲輪フェリオ"},
+  {key:/グランドプラザ/,                    name:"総曲輪グランドプラザ"},
+  {key:/ファボーレ/,                        name:"ファボーレ"},
+  {key:/アピタ富山東/,                      name:"アピタ富山東"},
+  {key:/アピタ富山/,                        name:"アピタ富山"},
+  {key:/イオンモール高岡/,                  name:"イオンモール高岡"},
+  {key:/イオンモール/,                      name:"イオンモール"},
+  {key:/マリエとやま|マリエ富山/,           name:"マリエとやま"},
+  {key:/MAROOT|マルート/,                   name:"MAROOT"},
+  {key:/アプリオ/,                          name:"アプリオ"},
+  {key:/CiC/,                               name:"CiC"},
+];
 // ドラッグストアは指定の5チェーンのみを対象にする
 const DRUG_OK=/クスリのアオキ|ウエルシア|ウェルシア|スギ薬局|スギドラッグ|コスモス|Ｖ・?ドラッグ|V・?drug|V・?ドラッグ|ブイドラッグ|Vドラッグ/i;
 const CATS=[
@@ -418,21 +433,27 @@ async function surveyAddress(addr,opt){
   ]);
 
   const cats=opt.cats||CATS.filter(c=>c.on);
+  const collapseMall=p=>{                              // 大型商業施設の中のテナントをまとめる
+    for(const m of MALLS) if(m.key.test(p.name)) return {...p,name:m.name};
+    return p;
+  };
   const jobs=cats.map(async c=>{
     const res=await Promise.all([
       nearby(o,c.types,c.r,5),
       ...(c.text||[]).map(t=>textNear(t,o,c.r,5))
     ]);
     const seen=new Set(),out=[];
-    for(const p of res.flat()){
+    const mall=(c.id==="sc"||c.id==="super");
+    for(let p of res.flat()){
       if(c.filter&&!c.filter.test(p.name))continue;   // カテゴリごとの絞り込み
-      const k=p.name+"|"+p.lat.toFixed(5);
+      if(mall)p=collapseMall(p);                       // テナント名を施設名へまとめる
+      const k=mall?p.name:(p.name+"|"+p.lat.toFixed(5));
       if(seen.has(k))continue;
       seen.add(k);out.push({...p,cat:c.id,catLabel:c.label});
     }
     return out.sort((a,b)=>haversine(o,a)-haversine(o,b)).slice(0,6);
   });
-  const dedupe=(arr,drop)=>{
+  const dedupe=(arr,drop,keep)=>{
     const seen=new Set(),out=[];
     for(const p of arr){
       if(drop&&drop.test(p.name))continue;
@@ -440,17 +461,21 @@ async function surveyAddress(addr,opt){
       if(seen.has(k))continue;
       seen.add(k);out.push(p);
     }
-    return out.sort((a,b)=>haversine(o,a)-haversine(o,b)).slice(0,5);
+    return out.sort((a,b)=>haversine(o,a)-haversine(o,b)).slice(0,keep||5);
   };
   // 駅とバス停は施設の種別で厳密に振り分ける（バス停が駅として出る事故を防ぐ）
   const RAIL=["train_station","subway_station","light_rail_station"];
   const BUS=["bus_stop","bus_station"];
   const hasType=(p,list)=>(p.types||[]).some(t=>list.indexOf(t)>=0);
-  const isRail=p=>hasType(p,RAIL)||(!p.types||!p.types.length)&&/駅|電停/.test(p.name);
+  // 路面電車の停留場はGoogleの分類が鉄道駅でないことがあるため、
+  // 路線表（LINE_MAP）に名前がある停留場は種別に関わらず採用する
+  const isRail=p=>hasType(p,RAIL)||!!lineOf(p.name)||
+                  ((!p.types||!p.types.length)&&/駅|電停/.test(p.name));
   const staJob=Promise.all([
-    nearby(o,RAIL,5000,8),
-    textNear("駅",o,3000,6)
-  ]).then(r=>dedupe(r.flat().filter(isRail),/バス停|停留所|バスターミナル/));
+    nearby(o,RAIL,6000,12),
+    nearby(o,["transit_station"],2500,12),
+    textNear("駅",o,3000,8)
+  ]).then(r=>dedupe(r.flat().filter(isRail),/バス停|停留所|バスターミナル/,12));
   const busJob=Promise.all([
     nearby(o,BUS,1500,8),
     textNear("バス停",o,1200,6)
