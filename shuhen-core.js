@@ -183,6 +183,8 @@ const ALLPAIRS=(()=>{const s=new Set();for(const[e,m]of GAKKU_RAW)s.add(e+"|"+m)
 
 
 const YOUJI_OK=/保育|幼稚|こども園|子ども園|認定こども/;
+// スーパーの候補から外す専門店。昆布屋・鱒の寿司屋・和菓子店などが枠を埋めないようにする
+const SUPER_NG=/昆布|こんぶ|コンブ|佃煮|つくだ煮|かまぼこ|蒲鉾|梅かま|練り物|和菓子|洋菓子|菓子店|ケーキ|煎餅|せんべい|酒店|酒販|地酒|茶舗|茶店|海苔|のり店|豆腐|精肉|鮮魚|青果|乾物|珍味|漬物|味噌|醤油|米穀|米店|パン工房|ベーカリー|寿司|鮨|すし処|弁当|惣菜|直売所|物産|土産|商店街|市場$/;
 // 大型商業施設。中のテナントが個別に出ないよう、この施設名にまとめる
 const MALLS=[
   {key:/富山大和|大和富山/,                 name:"富山大和"},
@@ -203,7 +205,8 @@ const DRUG_OK=/クスリのアオキ|ウエルシア|ウェルシア|スギ薬�
 const CATS=[
  {id:"youji",  label:"幼稚園・保育園", types:["preschool","child_care_agency","school"], text:["保育所","保育園","幼稚園","認定こども園"], filter:YOUJI_OK, r:1500, on:true},
  {id:"conv",   label:"コンビニ",       types:["convenience_store"],             r:1500, on:true},
- {id:"super",  label:"スーパー",       types:["supermarket","grocery_store"],   text:["スーパー"], r:2500, on:true},
+ {id:"super",  label:"スーパー",       types:["supermarket"], primary:true,
+    text:["スーパー","アルビス","大阪屋ショップ","バロー"], ng:SUPER_NG, keep:10, r:2500, on:true},
  {id:"drug",   label:"ドラッグストア", types:["drugstore","pharmacy"],
     text:["クスリのアオキ","ウエルシア","スギ薬局","ディスカウントドラッグコスモス","V・drug"], filter:DRUG_OK, r:3000, on:true},
  {id:"sc",     label:"SC",             types:["shopping_mall"],                 r:4000, on:true},
@@ -322,15 +325,18 @@ async function geocode(addr){
 }
 const PREC={ROOFTOP:["建物単位",false],RANGE_INTERPOLATED:["番地から推定",true],
             GEOMETRIC_CENTER:["区画の中心",true],APPROXIMATE:["おおよその位置",true]};
-async function nearby(center,types,radius,n){
+async function nearby(center,types,radius,n,primary){
   const {Place,SearchNearbyRankPreference}=await google.maps.importLibrary("places");
   try{
-    const{places}=await Place.searchNearby({
+    const req={
       fields:["displayName","location","types"],
       locationRestriction:{center:new google.maps.LatLng(center.lat,center.lng),radius:radius},
-      includedTypes:types, maxResultCount:n||5,
+      maxResultCount:n||5,
       rankPreference:SearchNearbyRankPreference.DISTANCE, language:"ja", region:"jp"
-    });
+    };
+    // primary を指定すると「主たる種別」が一致するものだけになる（専門店を除きたいとき）
+    if(primary)req.includedPrimaryTypes=types; else req.includedTypes=types;
+    const{places}=await Place.searchNearby(req);
     return places.map(p=>({name:p.displayName,lat:p.location.lat(),lng:p.location.lng(),types:p.types||[]}));
   }catch(e){console.warn("nearby失敗",types,e);return[];}
 }
@@ -439,19 +445,20 @@ async function surveyAddress(addr,opt){
   };
   const jobs=cats.map(async c=>{
     const res=await Promise.all([
-      nearby(o,c.types,c.r,5),
-      ...(c.text||[]).map(t=>textNear(t,o,c.r,5))
+      nearby(o,c.types,c.r,c.keep||6,c.primary),
+      ...(c.text||[]).map(t=>textNear(t,o,c.r,6))
     ]);
     const seen=new Set(),out=[];
     const mall=(c.id==="sc"||c.id==="super");
     for(let p of res.flat()){
-      if(c.filter&&!c.filter.test(p.name))continue;   // カテゴリごとの絞り込み
+      if(c.filter&&!c.filter.test(p.name))continue;   // 残す条件
+      if(c.ng&&c.ng.test(p.name))continue;             // 外す条件（専門店など）
       if(mall)p=collapseMall(p);                       // テナント名を施設名へまとめる
       const k=mall?p.name:(p.name+"|"+p.lat.toFixed(5));
       if(seen.has(k))continue;
       seen.add(k);out.push({...p,cat:c.id,catLabel:c.label});
     }
-    return out.sort((a,b)=>haversine(o,a)-haversine(o,b)).slice(0,6);
+    return out.sort((a,b)=>haversine(o,a)-haversine(o,b)).slice(0,c.keep||6);
   });
   const dedupe=(arr,drop,keep)=>{
     const seen=new Set(),out=[];
