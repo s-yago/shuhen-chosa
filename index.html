@@ -320,6 +320,7 @@ details.adv summary{cursor:pointer;font-size:14px;font-weight:700;color:var(--na
         <div class="zoomrow">縮尺 <button class="btn sm ghost" id="zout">－</button><span id="zval">16</span><button class="btn sm ghost" id="zin">＋</button></div>
         <button class="btn sm ghost" id="zreset">位置を戻す</button>
         <button class="btn sm ghost" id="fixpin">物件位置を直す</button>
+        <button class="btn sm ghost" id="mapion">マピオンで開く</button>
         <label style="font-weight:700"><input type="checkbox" id="numlabel" checked> 番号を入れる</label>
         <label style="font-weight:700"><input type="checkbox" id="gsistd" checked> 標準地図（外すと淡色）</label>
         <label style="font-weight:700"><input type="checkbox" id="tone" checked> 建物の色を抑える</label>
@@ -999,6 +1000,13 @@ function initUI(){
   $("#zout").onclick=()=>{if(state.zoom<=11)return;state.zoom--;state.pan.x/=2;state.pan.y/=2;$("#zval").textContent=state.zoom;drawMap();};
   $("#zreset").onclick=()=>{autoZoom();drawMap();};
   $("#fixpin").onclick=()=>setFixing(!state.fixing);
+  // マピオンを物件の位置・縮尺で開く（画像の取り込みは行わない）
+  $("#mapion").onclick=()=>{
+    if(!state.origin){say("先に調査を実行してください。","err");return;}
+    const c=mapCenter();
+    window.open(`https://www.mapion.co.jp/m2/${state.zoom}.00/${c.lat.toFixed(6)}/${c.lng.toFixed(6)}/0/0`,
+                "_blank","noopener");
+  };
   $("#numlabel").onchange=drawMap;$("#gsistd").onchange=drawMap;$("#remap").onclick=drawMap;
   $("#tone").onchange=()=>{MAP_TONE.on=$("#tone").checked;drawMap();};
   $("#pincol").onchange=()=>{PINC.fac=$("#pincol").value;drawMap();};
