@@ -204,14 +204,19 @@ const MALLS=[
   {key:/CiC/,                               name:"CiC"},
 ];
 // ドラッグストアは指定の5チェーンのみを対象にする
-const DRUG_OK=/クスリのアオキ|ウエルシア|ウェルシア|スギ薬局|スギドラッグ|コスモス|Ｖ・?ドラッグ|V・?drug|V・?ドラッグ|ブイドラッグ|Vドラッグ/i;
+// 店名は全角・半角が混ざるため、判定前にこれで揃える（例：Ｖ・drug → V・drug）
+const toHalf=s=>String(s||"")
+  .replace(/[Ａ-Ｚａ-ｚ０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0))
+  .replace(/[　\s]+/g," ").trim();
+const DRUG_OK=/クスリのアオキ|ウエルシア|ウェルシア|スギ薬局|スギドラッグ|コスモス|V ?・? ?drug|V ?・? ?ドラッグ|Vドラッグ|ブイドラッグ/i;
 const CATS=[
  {id:"youji",  label:"幼稚園・保育園", types:["preschool","child_care_agency","school"], text:["保育所","保育園","幼稚園","認定こども園"], filter:YOUJI_OK, r:1500, on:true},
  {id:"conv",   label:"コンビニ",       types:["convenience_store"],             r:1500, on:true},
  {id:"super",  label:"スーパー",       types:["supermarket"], primary:true,
     text:["スーパー"].concat(SUPER_CHAINS), ng:SUPER_NG, keep:10, r:2500, on:true},
  {id:"drug",   label:"ドラッグストア", types:["drugstore","pharmacy"],
-    text:["クスリのアオキ","ウエルシア","スギ薬局","ディスカウントドラッグコスモス","V・drug"], filter:DRUG_OK, r:3000, on:true},
+    text:["クスリのアオキ","ウエルシア","スギ薬局","ディスカウントドラッグコスモス","Vドラッグ"],
+    filter:DRUG_OK, keep:8, r:3000, on:true},
  {id:"sc",     label:"SC",             types:["shopping_mall"],                 r:4000, on:true},
  {id:"post",   label:"郵便局",         types:["post_office"],                   r:2500, on:true},
  {id:"bank",   label:"銀行",           types:["bank"],                          r:2500, on:true},
@@ -454,8 +459,9 @@ async function surveyAddress(addr,opt){
     const seen=new Set(),out=[];
     const mall=(c.id==="sc"||c.id==="super");
     for(let p of res.flat()){
-      if(c.filter&&!c.filter.test(p.name))continue;   // 残す条件
-      if(c.ng&&c.ng.test(p.name))continue;             // 外す条件（専門店など）
+      const nm=toHalf(p.name);
+      if(c.filter&&!c.filter.test(nm))continue;        // 残す条件
+      if(c.ng&&c.ng.test(nm))continue;                 // 外す条件（専門店など）
       if(mall)p=collapseMall(p);                       // テナント名を施設名へまとめる
       const k=mall?p.name:(p.name+"|"+p.lat.toFixed(5));
       if(seen.has(k))continue;
